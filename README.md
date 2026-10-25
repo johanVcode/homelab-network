@@ -42,6 +42,18 @@ The OptiPlex has one network port, and a firewall needs two. The Wi-Fi slot is M
 
 ---
 
+## Threat model
+
+What this setup is sized for:
+
+- **Untrusted devices on the LAN:** smart devices and phones that can't be patched or audited, kept to internet-only access.
+- **A compromised device:** limits what it can reach and makes its DNS traffic visible and filtered.
+- **Exposure to the internet:** nothing is reachable from outside; the WAN has no allow rules.
+
+Out of scope: targeted attacks by skilled adversaries and physical access to the hardware.
+
+---
+
 ## Design principles
 
 - **Deny by default.** The built-in "allow LAN to anything" rules are disabled; every allowed flow is an explicit rule.
@@ -120,6 +132,7 @@ An allow list on top of default deny. About 60 explicit block rules were replace
 - Anti-lockout is enabled deliberately, so the GUI and SSH each remain a way back in if the other fails.
 - **Remote logging (temporary):** firewall logs go over syslog (UDP) to a lab VM, received by rsyslog into a dedicated file, rotated daily or at 100 MB, compressed and kept for 14 days. On the VM, firewalld accepts syslog only from the firewall's address. Its purpose is the freeze investigation (see Troubleshooting): a frozen firewall can't keep its own logs, so they're kept off the box.
 - Traffic shaping: fq_codel on WAN (download and upload), set just below the line rate to prevent bufferbloat.
+- Hardware offloading (checksum, TSO, LRO) is disabled, as required for Suricata's inline (netmap) mode.
 - SYN cookies in adaptive mode: enabled when the state table reaches 25 % and disabled below 12 %, protecting the state table against SYN floods once services are exposed.
 
 ---
@@ -149,6 +162,7 @@ OPNsense runs on ZFS; a snapshot is taken before every larger change, so a faile
 | snap02-fresh-update | After the first firmware update |
 | snap03-fresh-config-change | After the first large rule change |
 | snap04-updated-config-firmware | Before publishing this repo |
+| snap05-tuned-config | After tuning: allow rules, forced DNS, SSH key-only |
 
 Snapshots share the disk, so they protect against configuration mistakes, not disk failure.
 
@@ -201,7 +215,7 @@ Tests that show the configuration works as described.
 
 A query sent directly to Google's resolver (8.8.8.8) for an internal name that only the firewall knows:
 
-![nslookup-screenshot](images/nslookup-screenshot.png)
+![nslookup omar-little.internal 8.8.8.8 returns 192.168.0.2](images/nslookup-screenshot.png)
 
 Google can't resolve `*.internal`, so the answer `192.168.0.2` proves the NAT rule intercepted the query and the firewall answered it. nslookup still shows `dns.google` as the server, because the redirect is invisible to the client.
 
@@ -218,6 +232,7 @@ Google can't resolve `*.internal`, so the answer `192.168.0.2` proves the NAT ru
 - **Randomized MAC addresses** on phones break MAC-based reservations and, later, MAB.
 - **Wi-Fi is one group:** the current access point can't map SSIDs to VLANs.
 - **Syslog over UDP is unencrypted** and can drop messages. It's a temporary setup for the freeze investigation on a single LAN; TLS syslog is an option if it stays.
+- **No alerting yet:** logs are collected off the box, but nothing notifies me automatically (for example when the gateway goes down or the disk fills up).
 - **Proxmox management is reachable from the whole LAN** on a flat network; only its own login protects it until the HYPERVISOR VLAN exists.
 - **The switch's admin page is HTTP only,** so its password crosses the LAN unencrypted. Management moves to the admin VLAN with the VLAN migration.
 
@@ -233,6 +248,7 @@ Google can't resolve `*.internal`, so the answer `192.168.0.2` proves the NAT ru
 6. Finish the freeze investigation with inline IPS in test windows; threat lists as firewall aliases for daily blocking.
 7. WireGuard for remote access, on its own subnet.
 8. 5G backup line (multi-WAN).
+9. Alerts for gateway down and low disk space.
 
 ---
 
@@ -240,7 +256,7 @@ Google can't resolve `*.internal`, so the answer `192.168.0.2` proves the NAT ru
 
 | Date | Change |
 |---|---|
-| 2026-10-25 | Verification section (forced DNS proven with an internal-name lookup via 8.8.8.8); IPv6 disabled globally; work-in-progress note; 15-minute GUI session timeout and shell inactivity timeout; IPv6 removed from interfaces; kernel debugging plan for the freeze investigation; network diagram; config re-exported and re-sanitized; README summary, rule screenshot and new known limitations; log rotation capped at 100 MB; IDS/IPS off for daily use (latency); freeze investigation opened; "How this was built" section |
+| 2026-10-25 | Threat model; snap05 in the snapshot table; offloading and alerting documented; verification section (forced DNS proven with an internal-name lookup via 8.8.8.8); IPv6 disabled globally; work-in-progress note; 15-minute GUI session timeout and shell inactivity timeout; IPv6 removed from interfaces; kernel debugging plan for the freeze investigation; network diagram; config re-exported and re-sanitized; README summary, rule screenshot and new known limitations; log rotation capped at 100 MB; IDS/IPS off for daily use (latency); freeze investigation opened; "How this was built" section |
 | 2026-10-24 | 8 allow rules on default deny; completed `PRIVATE_NETS`; public IP from the ISP (CGNAT removed); forced local DNS and outbound DNS-over-TLS blocked; SYN cookies (adaptive); SSH key-only; GUI logins limited to the ADMIN range; remote logging to a lab VM; Proxmox on a static address; reservations for lab VMs, switch and access point; NETWORK group; internal DNS names and role-based hostnames for admin devices (`admin-pc-01/02`); troubleshooting corrected (inline Suricata, not the I226-V); DHCP troubleshooting documented; README rewritten |
 | 2026-10-23 | Hardware photos and sanitized config export |
 | 2026-10-13 | Repository created |
