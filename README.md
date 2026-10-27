@@ -1,12 +1,22 @@
 # avon-barksdale — OPNsense firewall
 
-My home lab's firewall and router, built, broken and rebuilt by me.
+The firewall and router for my home lab, running OPNsense on a Dell OptiPlex.
 
-> **TL;DR:** A bare-metal OPNsense firewall where **nothing is allowed unless I wrote a rule for it**. Every device group is isolated from every other group and gets only the internet and the firewall's DNS. DNS is validated, encrypted and forced through the firewall. The layout is already built for VLANs and 802.1X.
+> **Status:** living project, updated as the lab changes.
+> **Last verified against the running system:** 2026-10-26
 
-**What I aim for:** zero trust, scalable, reliable, and documented — so clearly that someone who has never seen the system can follow it without guessing. I don't always get there. Where I fall short is in [Known limitations](#known-limitations), and any improvement is welcome as an [issue](../../issues).
+> **TL;DR:** Deny by default: every allowed flow is a rule I wrote on purpose.
+> Each device group gets only the internet and the firewall's DNS, and nothing else
+> passes through the firewall between groups. The network is still flat, so devices on
+> the same switch can reach each other directly until VLANs are in place.
+> DNS is validated, encrypted and forced through the firewall.
 
-> **Sanitized on purpose:** passwords, keys, certificates and public IPs are removed from the [config export](config/config-avon-barksdale-sanitized.xml), and screenshots are redacted.
+Known gaps are listed in [Known limitations](#known-limitations). Improvements are
+welcome as an [issue](../../issues).
+
+> **Sanitized:** passwords, keys, certificates, usernames and public IPs are removed
+> from the [config export](config/config-avon-barksdale-sanitized.xml), and screenshots
+> are redacted.
 
 ![Network overview](images/network-diagram.png)
 
@@ -14,14 +24,17 @@ My home lab's firewall and router, built, broken and rebuilt by me.
 
 ## How this was built
 
-- **My own work, as a beginner:** the first setup on Proxmox, the firewall rules, device groups and aliases, Unbound with DNSSEC, DNS-over-TLS, and Quad9 with its backup server.
-- **Built with an LLM at my side:** most of what came after, including forced local DNS, remote logging, Unbound tuning, hardening and the freeze investigation. I understand what each part does, and I'm still learning the details.
+- **On my own, as a beginner:** the first setup on Proxmox, the firewall rules, device
+  groups and aliases, Unbound with DNSSEC, DNS-over-TLS, and Quad9 with its backup server.
+- **With an LLM as a tutor:** most of what came after, including forced local DNS,
+  remote logging, Unbound tuning, hardening and the freeze investigation. I can explain
+  what each part does, and I'm still learning the details.
 
 ---
 
 ## Design decisions
 
-Every choice below has a reason, and most of them had an alternative I decided against.
+Each choice below has a reason, and most had an alternative I decided against.
 
 ### 1. Deny by default
 
