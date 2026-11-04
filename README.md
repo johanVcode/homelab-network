@@ -110,6 +110,26 @@ Inline (netmap) on WAN, hardware offloading disabled.
 
 ---
 
+## How I built it
+
+I designed and tested the setup in a **Proxmox VM** first, then moved it to bare metal.
+
+**What I did on my own:**
+- Firewall design: deny by default, one rule set per VLAN, aliases and categories.
+- Unbound DNS with DNSSEC.
+- DHCP reservations and local DNS names, with a naming convention (`firstname-lastname.internal`) so every device is easy to identify.
+
+**Where I had help:**
+- **802.1Q VLANs and trunking** between OPNsense and the switch.
+- **Forcing DNS through the firewall** by blocking DNS-over-TLS (port 853), which was a technique I didn't know.
+- **Troubleshooting** why VLANs other than ADMIN had no internet after the migration.
+
+I used an AI assistant (Claude) as support during the migration, mainly to plan the order of changes so I wouldn't lose connectivity while moving from a flat network to VLANs. I made and verified every change myself, and I made sure I understood each step before applying it.
+
+**What I'd do differently:** finish tuning everything in the VM before migrating. Several fixes happened on the live network that could have been solved in testing first.
+
+---
+
 ## Troubleshooting notes
 
 **Intel I226-V on FreeBSD.** OPNsense worked as a Proxmox VM, but on bare metal the I226-V had driver issues (a known FreeBSD problem). It now runs bare metal on the I226-V.
