@@ -1,197 +1,177 @@
-# avon-barksdale — OPNsense firewall
+# Home network: OPNsense + VLANs
 
-The firewall and router for my home lab, running OPNsense on a Dell OptiPlex.
+My home lab network, which I built and maintain myself. I'm studying to become a DBA, and this lab is where I practice the infrastructure around databases: networking, firewalling, Linux and virtualization.
 
-> **Status:** living project, updated as the lab changes.
-> **Last verified against the running system:** 2026-10-26
-
-> **TL;DR:** Deny by default: every allowed flow is a rule I wrote on purpose.
-> Each device group gets only the internet and the firewall's DNS, and nothing else
-> passes through the firewall between groups. The network is still flat, so devices on
-> the same switch can reach each other directly until VLANs are in place.
-> DNS is validated, encrypted and forced through the firewall.
-
-Known gaps are listed in [Known limitations](#known-limitations). Improvements are
-welcome as an [issue](../../issues).
-
-> **Sanitized:** passwords, keys, certificates, usernames and public IPs are removed
-> from the [config export](config/config-avon-barksdale-sanitized.xml), and screenshots
-> are redacted.
-
-![Network overview](images/network-diagram.png)
+> **Sanitized:** [`config-sanitized.xml`](config-sanitized.xml) is the real OPNsense backup with password hashes, keys, certificates, usernames and MAC addresses removed. The README is written by hand from the running setup.
 
 ---
 
-## How this was built
+## Topology
 
-- **On my own, as a beginner:** the first setup on Proxmox, the firewall rules, device
-  groups and aliases, Unbound with DNSSEC, DNS-over-TLS, and Quad9 with its backup server.
-- **With an LLM as a tutor:** most of what came after, including forced local DNS,
-  remote logging, Unbound tuning, hardening and the freeze investigation. I can explain
-  what each part does, and I'm still learning the details.
+```mermaid
+flowchart TD
+    ISP[Internet] --- WAN
+    subgraph FW[OPNsense firewall]
+        WAN[WAN em0]
+        TRUNK[LAN igc0: 802.1Q trunk]
+    end
+    TRUNK --- SW[TP-Link SG3210X-M2]
+    SW --- V10[VLAN 10 INFRA]
+    SW --- V20[VLAN 20 ADMIN]
+    SW --- V30[VLAN 30 HYPERVISOR<br/>Proxmox]
+    SW --- V40[VLAN 40 HOMELAB<br/>Oracle Linux VMs]
+    SW --- V50[VLAN 50 GAMING]
+    SW --- V60[VLAN 60 MOBILE<br/>Wi-Fi AP]
+    SW --- V70[VLAN 70 IOT]
+    SW --- V80[VLAN 80 REST]
+    SW --- V100[VLAN 100 SERVER]
+```
 
 ---
 
-## Design decisions
+## Hardware
 
-Each choice below has a reason, and most had an alternative I decided against.
+| Part     | Choice                                  | Notes                                  |
+| -------- | --------------------------------------- | -------------------------------------- |
+| Firewall | Dell OptiPlex 5090 SFF, i5-10500T, 16 GB | OPNsense on bare metal                 |
+| WAN NIC  | Onboard Intel 1 Gbit                    |                                        |
+| LAN NIC  | Intel I226-V 2.5 Gbit (M.2)             | Single 802.1Q trunk to the switch      |
+| Switch   | TP-Link SG3210X-M2 (Omada, standalone)  | Layer 2 only. Routing is done by OPNsense |
+| Hypervisor | Proxmox                               | Linux VMs, incl. Oracle Linux for DB practice |
 
-### 1. Deny by default
+---
 
-OPNsense ships with "allow LAN to anything" rules for IPv4 and IPv6. **I disabled both.** Every allowed flow is now a rule I wrote on purpose, and everything else hits the default deny, which is logged.
+## VLANs
 
-*Rejected alternative:* keeping the default rules and blocking known-bad traffic. That's allow-by-default with extra steps.
+Each VLAN is a `/24` (`10.0.<VLAN>.0/24`) with OPNsense as gateway on `.1`. Statics and reservations use `.11–.100`, the DHCP pool is `.101–.200`.
 
-### 2. Full isolation instead of trust tiers
+| VLAN | Name       | Purpose                         | Access                     |
+| ---- | ---------- | ------------------------------- | -------------------------- |
+| 10   | INFRA      | Firewall, switch management     | Reachable from ADMIN only  |
+| 20   | ADMIN      | My admin PCs                    | Full access                |
+| 30   | HYPERVISOR | Proxmox host                    | Internet only              |
+| 40   | HOMELAB    | Lab VMs (Oracle Linux, logging) | Internet only              |
+| 50   | GAMING     | Gaming PCs                      | Internet only              |
+| 60   | MOBILE     | Phones, Wi-Fi AP                | Internet only              |
+| 70   | IOT        | Smart devices                   | Internet only              |
+| 80   | REST       | Unknown devices                 | Internet only              |
+| 100  | SERVER     | Game server VMs (planned)       | Internet only              |
 
-Every device group is isolated. No group can reach another group. Each one gets the internet and the firewall's DNS, and nothing else. The only exception is ADMIN, because I need to manage everything from somewhere.
+On the switch, port 8 is the tagged trunk to OPNsense and port 3 carries the Proxmox VLANs. Unused ports sit in **VLAN 999**, which goes nowhere, so plugging into a free port doesn't land you on a real network. VLAN 1 has no members. VLANs 70 and 80 exist on the firewall and will be added to the switch when devices need them.
 
-Default deny plus 8 allow rules replaced about 60 block rules. Rules are evaluated top-down, and the first match wins:
+![Switch VLANs](images/switch-vlans.png)
 
-| # | Source | Destination | Action |
-|---|---|---|---|
-| 1 | any | any, DNS-over-TLS (853) | block, logged |
-| 2 | ADMIN | any | allow |
-| 3 | any | firewall, DNS (53) | allow |
-| 4–9 | HYPERVISOR, HOMELAB, LAN, MOBILE, IOT, REST | internet only (`! PRIVATE_NETS`) | allow |
-| – | everything else | – | default deny, logged |
+---
 
-![OPNsense LAN rules](images/opnsense-firewall-rules.png)
-*The live LAN rule list. The default allow rules are disabled at the top.*
+## Firewall rules
 
-- **"Internet only" really means internet only.** `PRIVATE_NETS` covers RFC 1918, CGNAT (`100.64.0.0/10`) and link-local, so a group can't sneak into another private range either.
-- **NETWORK (`.201–.250`) gets no allow rule at all.** Switches and access points don't need the internet, so they don't get it.
-- **The DoT block sits above ADMIN on purpose.** Not even my own devices can skip the firewall's DNS.
-- **IPv6 is disabled entirely** rather than half-secured.
+Deny by default. Only the flows below are allowed:
 
-*Rejected alternative:* trust tiers, where each group is blocked only from groups more trusted than itself. That gives fewer rules to think about, but more allowed paths, and every allowed path is something an attacker can use. Full isolation flips that: there are fewer allowed paths, and every one of them is a rule I chose on purpose.
+1. **ADMIN → any:** allow, logged.
+2. **All VLANs → firewall, DNS (53) and NTP (123):** allow.
+3. **All VLANs → any, DNS-over-TLS (853):** block, logged. This forces clients to use the firewall's resolver.
+4. **Every other VLAN → `! PRIVATE_NETS`:** allow. Internet yes, other VLANs no.
 
-**Honest scope:** this isolates traffic that passes *through* the firewall. The network is still a flat /24, so devices on the same switch can reach each other directly. VLANs close that gap (see [Roadmap](#roadmap)).
+`PRIVATE_NETS` is an alias for RFC1918, CGNAT and link-local ranges. Anything not matched is dropped.
 
-### 3. Named for VLANs before VLANs exist
+![Firewall rules](images/firewall-rules.png)
 
-Each group already has its planned VLAN ID. When the new switch is in, moving to real VLANs is a migration, not a redesign. *(The full table is in [Reference](#reference).)*
+---
 
-### 4. IDS/IPS (Suricata): designed, tested, and off for now
+## Management
 
-**The design:** not every rule set deserves the power to drop traffic, so I split them by how often they're wrong:
+- Web GUI (HTTPS) and SSH listen on **INFRA only** (10.0.10.1). Admin PCs reach it through the ADMIN rule, and no other VLAN can.
+- SSH on a non-standard port, **key-only**, root login disabled.
+- Admin group is limited to the admin PCs' addresses. Root account disabled; I use a named account.
+- 15-minute auto-logout, password-protected console.
 
-- **Drop:** high-confidence lists with few false positives (abuse.ch feeds, known botnet and Cobalt Strike C2, exploits, phishing, worms).
-- **Alert only:** broad behavioral rules (scans, malware, coinminers, tor), which I review before I trust them.
+---
 
-It runs inline (netmap) on WAN, with nightly rule updates and hardware offloading disabled, as inline mode requires.
+## Services
 
-**Why it's off: two reasons.**
-1. **Latency.** I game, and inline inspection added noticeable delay. For a home network, I chose responsiveness over deep inspection and kept the firewall rules as the main defense.
-2. **An open bug.** On bare metal, inline Suricata makes the firewall hard-freeze. The investigation is below, and it's still open.
+- **DNS (Unbound):** DNSSEC, DNS-over-TLS upstream (Quad9), identity and version hidden. Local names for devices via host overrides (with PTR).
+- **DHCP (Kea):** one subnet per VLAN, reservations for known devices.
+- **Traffic shaping:** fq_codel on WAN up/down to keep latency low under load.
+- **WAN:** private and bogon networks blocked. IPv6 disabled for now.
+- **Logging:** remote syslog to a log VM in HOMELAB.
 
-#### Troubleshooting: firewall freezing every 12–24 hours (open)
+---
 
-- **Symptom:** after I moved OPNsense from a Proxmox VM to bare metal, it hard-froze every 12–24 hours. No GUI, no SSH, no logs. Only a reboot brought it back.
-- **First suspect: the Intel I226-V,** the new 2.5 GbE card and a known troublemaker on FreeBSD. Further research ruled it out.
-- **The clue:** Suricata ran inline for two weeks as a VM on Proxmox with no freezes. There, Linux drove the hardware and OPNsense only saw virtual NICs. The freezes started only when FreeBSD drove the hardware directly.
-- **Caveat:** the two setups weren't identical. The VM was my beginner setup, with far more rules and a lot of experimenting, so the comparison is a strong clue, not proof.
-- **Isolation:** on bare metal, I disabled Suricata and changed nothing else. The freezes stopped.
-- **Current theory:** a FreeBSD kernel-level problem with inline mode (netmap) on this hardware, not the card and not my configuration.
-- **Lesson:** I changed two things at once (bare metal *and* inline IPS), which made my first diagnosis wrong. Now I change one thing at a time.
-- **Next steps:** kernel crash dumps, console output during test windows, and a hardware watchdog. Logs already go to a lab VM over syslog, so the lead-up to a freeze survives the crash.
+## IDS/IPS (Suricata)
 
-### 5. DNS that can't be read, forged or skipped
+Configured but **currently off** while I tune it.
 
-- **DNSSEC validation** in Unbound, hardened with hidden identity and version, aggressive NSEC, prefetching and serve-expired.
-- **DNS-over-TLS only,** to Quad9 (`9.9.9.9`, with `149.112.112.112` as backup). The certificate is verified against `dns.quad9.net`, and there's no plain-text upstream.
-- **An ad and tracker blocklist,** refreshed on a schedule.
-- **Forced local DNS:** plain DNS to *any* server is redirected to the firewall by a NAT rule, and outbound DNS-over-TLS is blocked. Devices with hardcoded resolvers still get filtered answers.
-- **Internal names** (`*.internal`) through host overrides.
+| Policy                         | Action | Examples                                               |
+| ------------------------------ | ------ | ------------------------------------------------------ |
+| Confirmed malicious, low false positives | Drop   | abuse.ch, botnet C2, `drop`, exploit, phishing, worm  |
+| Broad / behavioral             | Alert  | scan, malware, coinminer, tor, user agents             |
 
-**Proof it works:** I asked Google's resolver for a name that only my firewall knows:
+Inline (netmap) on WAN, hardware offloading disabled.
 
-![nslookup omar-little.internal 8.8.8.8 returns 192.168.0.2](images/nslookup-screenshot.png)
-*Google can't know `*.internal`, so getting an answer proves the firewall intercepted the query.*
+---
 
-### 6. Right-sized, not oversized
+## Troubleshooting notes
 
-I use enterprise patterns on hardware that fits an apartment. A low-power i5-10500T is plenty for routing and filtering, and FreeRADIUS will run on a Raspberry Pi instead of a server rack.
+**Intel I226-V on FreeBSD.** OPNsense worked as a Proxmox VM, but on bare metal the I226-V had driver issues (a known FreeBSD problem). It now runs bare metal on the I226-V.
+
+**VLAN migration.** Moving from one flat /24 to VLANs taught me:
+- OPNsense doesn't discover VLANs from the switch. Each one is created, assigned and given rules on the firewall.
+- Devices with static IPs never show up in DHCP leases. The ARP table is where you see them.
+- Change rules **before** changing listen interfaces, or you lock yourself out.
+
+---
+
+## Snapshots and rollback
+
+OPNsense runs on ZFS, so I take a **boot environment snapshot** before every larger change (fresh install, updates, config tuning, the VLAN migration). If an update or change breaks something, I can boot back into the previous state in minutes.
+
+Snapshots live on the same disk, so they protect against bad changes, not disk failure. That's why I also download the config backup to another machine.
+
+![Snapshots](images/snapshots.png)
+
+---
+
+## How I verify changes
+
+- After each change: check the **ARP table** (is the device there?), **DHCP leases**, and test from a client with `nslookup` and `ping`.
+- Firewall rules are tested from the VLAN they apply to, both allowed and blocked traffic, and blocks are confirmed in the firewall log.
+- I download a **config backup before and after** larger changes, so I can roll back if needed.
+
+---
+
+## What this lab gives me as a future DBA
+
+- **Networking:** VLANs, routing, firewall rules and DNS. This is what usually stands between an application and its database.
+- **Linux:** Oracle Linux VMs with hardened SSH (key-only, fail2ban), used for database practice.
+- **Security habits:** least privilege, separate management network, logging, and sanitizing before publishing.
+- **Documentation:** writing down decisions, limitations and changes so someone else can follow them.
 
 ---
 
 ## Known limitations
 
-Here's the honest list, because a design is only as good as its weakest part:
-
-- **The network is flat.** Groups are IP ranges, so a device that self-assigns an ADMIN address gets admin access. VLANs and 802.1X fix this.
-- **DNS-over-HTTPS can bypass forced DNS,** because it shares port 443 with normal web traffic. (pointed out by the LLM on a review, still dont understand it 100%)
-- **The anti-lockout rule** leaves the GUI and SSH ports reachable from the whole LAN. Login is still admin-only.
-- **There's no 2FA on the GUI yet,** and config backups are manual.
-- **There's no alerting.** Logs are collected, but nothing notifies me.
+- **No isolation inside a VLAN.** Devices in the same VLAN talk through the switch, not the firewall, so the firewall can't stop that traffic.
+- **Plain DNS bypass.** Clients can still use an outside resolver on port 53. A per-VLAN redirect isn't in place yet.
+- **DNS blocklist** is enabled but no lists are selected.
+- **INFRA** has no internet rule (e.g. no switch firmware updates from the switch itself).
 
 ---
 
 ## Roadmap
 
-1. **A VLAN-capable switch:** TP-Link Omada, with 8 × 2.5 GbE ports, 2 × SFP+ and a dedicated management port.
-2. **VLANs, one group at a time,** then disable the anti-lockout rule.
-3. **802.1X (EAP-TLS) with FreeRADIUS** on a Raspberry Pi, so devices land in their VLAN automatically, plus MAB for devices that can't do 802.1X.
-4. **WireGuard** for remote access, on its own subnet with its own rules.
-5. **Automated off-box backups and alerting.**
-6. **Finish the freeze investigation,** and move threat lists to firewall aliases.
-7. **A 5G backup line** (multi-WAN), with a rule that blocks heavy traffic to save mobile data.
+1. Force all DNS through the firewall (port 53 redirect per VLAN).
+2. Select DNS blocklists, and re-enable IDS/IPS after tuning.
+3. Game server VM in SERVER, with friends connecting over Tailscale or WireGuard.
+4. Remote access VPN with its own subnet and rules.
+5. 802.1X with FreeRADIUS (EAP-TLS), so devices land in the right VLAN automatically.
+6. 5G backup WAN (multi-WAN).
 
 ---
 
-## What I learned, and what I'm still asking
+## Changelog
 
-Building this with an LLM at my side made it feel like nothing was out of reach. It also showed me how big the gap is between "it works" and how a professional would run it. That gap is exactly what I want to close.
-
-**Questions I'm still chasing:**
-- How do professionals tune IDS/IPS rule sets without drowning in false positives, or in latency?
-- When is a virtualized firewall the *right* choice in production, and not just a workaround?
-
-If you have answers, I'd love to hear them.
-
----
-
-## Reference
-
-<details>
-<summary><b>Hardware</b></summary>
-
-Dell OptiPlex 5090 Micro: i5-10500T, 16 GB RAM, 256 GB SSD on ZFS.
-
-The OptiPlex has only one network port. I added a second by putting an Intel I226-V 2.5 GbE card in the M.2 Wi-Fi slot (Key E carries a PCIe lane), cabled to an RJ45 port mounted in the case.
-
-![Front](images/optiplex-front.png)
-![Inside: I226-V, SSD, M.2 A+E slot](images/optiplex-inside.png)
-
-</details>
-
-<details>
-<summary><b>Device groups and planned VLANs</b></summary>
-
-| Group      | VLAN | Range     | Role |
-| ---------- | ---- | --------- | ---- |
-| INFRA      | 100  | .1        | The firewall |
-| HYPERVISOR | 200  | .2–.10    | Proxmox hosts |
-| ADMIN      | 300  | .11–.20   | Admin devices |
-| HOMELAB    | 400  | .21–.40   | Lab VMs and services |
-| LAN        | 500  | .41–.60   | Everyday computers |
-| MOBILE     | 600  | .61–.80   | Phones and tablets |
-| IOT        | 700  | .81–.100  | Smart devices |
-| REST       | 800  | .101–.200 | Anything unknown |
-| NETWORK    | –    | .201–.250 | Switches and access points (no internet) |
-
-</details>
-
-<details>
-<summary><b>Management, logging and hardening</b></summary>
-
-- **Web GUI:** HTTPS, LAN only, 15-minute timeout.
-- **SSH:** key-only, on a non-default port, with named personal accounts. Root login is disabled.
-- **Logging:** remote syslog to a lab VM (rsyslog, daily rotation, kept for 14 days).
-- **WAN:** no allow rules, so nothing is reachable from outside. Private and bogon networks are blocked.
-- **Traffic shaping:** fq_codel on WAN against bufferbloat.
-- **Snapshots:** a ZFS snapshot before every larger change, so a failed update rolls back in minutes.
-
-![ZFS snapshots](images/opnsense-snapshots.png)
-
-</details>
+| Date    | Change                                                                    |
+| ------- | ------------------------------------------------------------------------- |
+| 2026-10 | Repo created: flat network, firewall design, IDS policy                   |
+| 2026-11 | Managed switch + 9 VLANs, management moved to INFRA, SSH key-only, local DNS names |
+| 2026-11 | Sanitized config backup and topology diagram added |

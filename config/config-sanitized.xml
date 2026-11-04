@@ -14,7 +14,7 @@
       <description>sysadmin</description>
       <priv>page-all</priv>
       <member>0,2000,2001</member>
-      <source_networks>192.168.0.11/32,192.168.0.12/32,192.168.0.13/32,192.168.0.14/32,192.168.0.15/32,192.168.0.16/32,192.168.0.17/32,192.168.0.18/32,192.168.0.19/32,192.168.0.20/32</source_networks>
+      <source_networks>10.0.20.11/32,10.0.20.12/32</source_networks>
     </group>
     <group uuid="1c38d2d5-24b9-4a64-8c26-7d7505f34d6c">
       <gid>2000</gid>
@@ -35,7 +35,7 @@
       <otp_seed/>
       <shell/>
       <password>REDACTED</password>
-      <pwd_changed_at>1784653780.694</pwd_changed_at>
+      <pwd_changed_at>REDACTED</pwd_changed_at>
       <landing_page/>
       <comment/>
       <email/>
@@ -48,7 +48,7 @@
     </user>
     <user uuid="34f674c6-325c-4a11-bd49-e9050353834f">
       <uid>2000</uid>
-      <name>sudo_user_1</name>
+      <name>admin-user-1</name>
       <disabled>0</disabled>
       <scope>user</scope>
       <expires/>
@@ -56,20 +56,20 @@
       <otp_seed/>
       <shell>/bin/sh</shell>
       <password>REDACTED</password>
-      <pwd_changed_at>1784934600.0514</pwd_changed_at>
+      <pwd_changed_at>REDACTED</pwd_changed_at>
       <landing_page/>
       <comment/>
       <email/>
       <apikeys/>
-      <priv>page-all</priv>
+      <priv/>
       <language/>
       <descr>sysadmin</descr>
-      <dashboard/>
+      <dashboard>REDACTED</dashboard>
       <menu_favorites/>
     </user>
     <user uuid="12415d9f-3c30-4ee2-9837-9132188197f7">
       <uid>2001</uid>
-      <name>sudo_user_2</name>
+      <name>admin-user-2</name>
       <disabled>0</disabled>
       <scope>user</scope>
       <expires/>
@@ -77,7 +77,7 @@
       <otp_seed/>
       <shell>/bin/sh</shell>
       <password>REDACTED</password>
-      <pwd_changed_at>1784654063.771</pwd_changed_at>
+      <pwd_changed_at>REDACTED</pwd_changed_at>
       <landing_page/>
       <comment/>
       <email/>
@@ -95,7 +95,7 @@
       <ssl-certref>6a5f986eafc79</ssl-certref>
       <port/>
       <ssl-ciphers/>
-      <interfaces>lan</interfaces>
+      <interfaces>opt1</interfaces>
       <compression/>
       <authmode>Local Database</authmode>
       <session_timeout>15</session_timeout>
@@ -114,7 +114,7 @@
     <ssh>
       <group>admins</group>
       <noauto>1</noauto>
-      <interfaces>lan</interfaces>
+      <interfaces>opt1</interfaces>
       <kex/>
       <ciphers/>
       <macs/>
@@ -122,7 +122,7 @@
       <keysig/>
       <rekeylimit/>
       <enabled>enabled</enabled>
-      <port>REDACTED</port>
+      <port>3333</port>
     </ssh>
     <firmware version="1.0.1" persisted_at="1784649827.81" description="Firmware settings">
       <mirror/>
@@ -167,35 +167,32 @@
       <spoofmac>REDACTED</spoofmac>
       <blockpriv>1</blockpriv>
       <blockbogons>1</blockbogons>
-      <mss>1400</mss>
       <ipaddr>dhcp</ipaddr>
       <dhcphostname/>
       <alias-address/>
       <alias-subnet>32</alias-subnet>
       <dhcprejectfrom/>
-      <adv_dhcp_pt_timeout>60</adv_dhcp_pt_timeout>
-      <adv_dhcp_pt_retry>15</adv_dhcp_pt_retry>
-      <adv_dhcp_pt_select_timeout>0</adv_dhcp_pt_select_timeout>
+      <adv_dhcp_pt_timeout/>
+      <adv_dhcp_pt_retry/>
+      <adv_dhcp_pt_select_timeout/>
       <adv_dhcp_pt_reboot/>
       <adv_dhcp_pt_backoff_cutoff/>
-      <adv_dhcp_pt_initial_interval>1</adv_dhcp_pt_initial_interval>
+      <adv_dhcp_pt_initial_interval/>
       <adv_dhcp_pt_values>SavedCfg</adv_dhcp_pt_values>
       <adv_dhcp_send_options/>
       <adv_dhcp_request_options/>
       <adv_dhcp_required_options/>
       <adv_dhcp_option_modifiers/>
-      <adv_dhcp_config_advanced>advanced</adv_dhcp_config_advanced>
+      <adv_dhcp_config_advanced/>
       <adv_dhcp_config_file_override/>
       <adv_dhcp_config_file_override_path/>
     </wan>
     <lan>
       <if>igc0</if>
-      <descr/>
+      <descr>TRUNK</descr>
       <enable>1</enable>
       <lock>1</lock>
       <spoofmac/>
-      <ipaddr>192.168.0.1</ipaddr>
-      <subnet>24</subnet>
     </lan>
     <lo0>
       <internal_dynamic>1</internal_dynamic>
@@ -209,6 +206,96 @@
       <type>none</type>
       <virtual>1</virtual>
     </lo0>
+    <opt1>
+      <if>vlan0010</if>
+      <descr>INFRA_DEVICES</descr>
+      <lock>1</lock>
+      <ipaddr>10.0.10.1</ipaddr>
+      <subnet>24</subnet>
+      <enable>1</enable>
+      <spoofmac/>
+      <dhcp6-ia-pd-len>0</dhcp6-ia-pd-len>
+    </opt1>
+    <opt2>
+      <if>vlan0020</if>
+      <descr>ADMIN_DEVICES</descr>
+      <lock>1</lock>
+      <ipaddr>10.0.20.1</ipaddr>
+      <subnet>24</subnet>
+      <enable>1</enable>
+      <spoofmac/>
+      <dhcp6-ia-pd-len>0</dhcp6-ia-pd-len>
+    </opt2>
+    <opt3>
+      <if>vlan0030</if>
+      <descr>HYPERVISOR_DEVICES</descr>
+      <lock>1</lock>
+      <ipaddr>10.0.30.1</ipaddr>
+      <subnet>24</subnet>
+      <enable>1</enable>
+      <spoofmac/>
+      <dhcp6-ia-pd-len>0</dhcp6-ia-pd-len>
+    </opt3>
+    <opt4>
+      <if>vlan0040</if>
+      <descr>HOMELAB_DEVICES</descr>
+      <lock>1</lock>
+      <ipaddr>10.0.40.1</ipaddr>
+      <subnet>24</subnet>
+      <enable>1</enable>
+      <spoofmac/>
+      <dhcp6-ia-pd-len>0</dhcp6-ia-pd-len>
+    </opt4>
+    <opt5>
+      <if>vlan0050</if>
+      <descr>GAMING_DEVICES</descr>
+      <lock>1</lock>
+      <ipaddr>10.0.50.1</ipaddr>
+      <subnet>24</subnet>
+      <enable>1</enable>
+      <spoofmac/>
+      <dhcp6-ia-pd-len>0</dhcp6-ia-pd-len>
+    </opt5>
+    <opt6>
+      <if>vlan0060</if>
+      <descr>MOBILE_DEVICES</descr>
+      <lock>1</lock>
+      <ipaddr>10.0.60.1</ipaddr>
+      <subnet>24</subnet>
+      <enable>1</enable>
+      <spoofmac/>
+      <dhcp6-ia-pd-len>0</dhcp6-ia-pd-len>
+    </opt6>
+    <opt7>
+      <if>vlan0070</if>
+      <descr>IOT_DEVICES</descr>
+      <lock>1</lock>
+      <ipaddr>10.0.70.1</ipaddr>
+      <subnet>24</subnet>
+      <enable>1</enable>
+      <spoofmac/>
+      <dhcp6-ia-pd-len>0</dhcp6-ia-pd-len>
+    </opt7>
+    <opt8>
+      <if>vlan0080</if>
+      <descr>REST_DEVICES</descr>
+      <lock>1</lock>
+      <ipaddr>10.0.80.1</ipaddr>
+      <subnet>24</subnet>
+      <enable>1</enable>
+      <spoofmac/>
+      <dhcp6-ia-pd-len>0</dhcp6-ia-pd-len>
+    </opt8>
+    <opt10>
+      <if>vlan0100</if>
+      <descr>SERVER_DEVICES</descr>
+      <ipaddr>10.0.100.1</ipaddr>
+      <subnet>24</subnet>
+      <lock>1</lock>
+      <enable>1</enable>
+      <spoofmac/>
+      <dhcp6-ia-pd-len>0</dhcp6-ia-pd-len>
+    </opt10>
   </interfaces>
   <dnsmasq version="1.0.9" persisted_at="1784762818.17" description="Dnsmasq DNS and DHCP">
     <enable>0</enable>
@@ -281,7 +368,7 @@
       <nosync>0</nosync>
       <natreflection/>
       <pass/>
-      <audit>eyJjcmVhdGVkIjp7InVzZXJuYW1lIjoiYnVuay5tb3JlbGFuZEAxOTIuMTY4LjAuMTEiLCJ0aW1lIjoiMTc5MjgyNTIzMy42NyIsImRlc2NyaXB0aW9uIjoiXC9hcGlcL2FwaS5waHAgbWFkZSBjaGFuZ2VzIn0sInVwZGF0ZWQiOnsidXNlcm5hbWUiOiJidW5rLm1vcmVsYW5kQDE5Mi4xNjguMC4xMSIsInRpbWUiOiIxNzkyODI1MjMzLjY3IiwiZGVzY3JpcHRpb24iOiJcL2FwaVwvYXBpLnBocCBtYWRlIGNoYW5nZXMifSwidXNlcmRhdGEiOnsibm90ZSI6IiJ9fQ==</audit>
+      <audit>REDACTED</audit>
       <associated-rule-id/>
     </rule>
   </nat>
@@ -293,131 +380,9 @@
   </ntpd>
   <OPNsense>
     <Firewall>
-      <Filter version="1.0.6" persisted_at="1792875152.85" description="Firewall rules (new)">
+      <Filter version="1.0.6" persisted_at="1793471659.51" description="Firewall rules (new)">
         <general/>
         <rules>
-          <rule uuid="3bf50721-7237-4f59-8912-23eeed6101c9">
-            <enabled>0</enabled>
-            <statetype>keep</statetype>
-            <state-policy/>
-            <sequence>1</sequence>
-            <action>pass</action>
-            <quick>1</quick>
-            <interfacenot>0</interfacenot>
-            <interface>lan</interface>
-            <received-on-not>0</received-on-not>
-            <received-on/>
-            <direction>in</direction>
-            <ipprotocol>inet</ipprotocol>
-            <protocol>any</protocol>
-            <icmptype/>
-            <icmp6type/>
-            <source_net>lan</source_net>
-            <source_not>0</source_not>
-            <source_port/>
-            <destination_net>any</destination_net>
-            <destination_not>0</destination_not>
-            <destination_port/>
-            <divert-to/>
-            <gateway/>
-            <replyto/>
-            <disablereplyto>0</disablereplyto>
-            <log>0</log>
-            <allowopts>0</allowopts>
-            <nosync>0</nosync>
-            <nopfsync>0</nopfsync>
-            <statetimeout/>
-            <udp-first/>
-            <udp-multiple/>
-            <udp-single/>
-            <max-src-nodes/>
-            <max-src-states/>
-            <max-src-conn/>
-            <max/>
-            <max-src-conn-rate/>
-            <max-src-conn-rates/>
-            <max-pkt-rate-number/>
-            <max-pkt-rate-seconds/>
-            <overload/>
-            <adaptivestart/>
-            <adaptiveend/>
-            <prio/>
-            <set-prio/>
-            <set-prio-low/>
-            <tag/>
-            <tagged/>
-            <tcpflags1/>
-            <tcpflags2/>
-            <tcpflags_any>0</tcpflags_any>
-            <categories/>
-            <sched/>
-            <tos/>
-            <shaper1/>
-            <shaper2/>
-            <description>Default allow LAN to any rule</description>
-            <audit/>
-          </rule>
-          <rule uuid="0e2d4aa2-347f-4818-9985-a7e8f9372535">
-            <enabled>0</enabled>
-            <statetype>keep</statetype>
-            <state-policy/>
-            <sequence>11</sequence>
-            <action>pass</action>
-            <quick>1</quick>
-            <interfacenot>0</interfacenot>
-            <interface>lan</interface>
-            <received-on-not>0</received-on-not>
-            <received-on/>
-            <direction>in</direction>
-            <ipprotocol>inet6</ipprotocol>
-            <protocol>any</protocol>
-            <icmptype/>
-            <icmp6type/>
-            <source_net>lan</source_net>
-            <source_not>0</source_not>
-            <source_port/>
-            <destination_net>any</destination_net>
-            <destination_not>0</destination_not>
-            <destination_port/>
-            <divert-to/>
-            <gateway/>
-            <replyto/>
-            <disablereplyto>0</disablereplyto>
-            <log>0</log>
-            <allowopts>0</allowopts>
-            <nosync>0</nosync>
-            <nopfsync>0</nopfsync>
-            <statetimeout/>
-            <udp-first/>
-            <udp-multiple/>
-            <udp-single/>
-            <max-src-nodes/>
-            <max-src-states/>
-            <max-src-conn/>
-            <max/>
-            <max-src-conn-rate/>
-            <max-src-conn-rates/>
-            <max-pkt-rate-number/>
-            <max-pkt-rate-seconds/>
-            <overload/>
-            <adaptivestart/>
-            <adaptiveend/>
-            <prio/>
-            <set-prio/>
-            <set-prio-low/>
-            <tag/>
-            <tagged/>
-            <tcpflags1/>
-            <tcpflags2/>
-            <tcpflags_any>0</tcpflags_any>
-            <categories/>
-            <sched/>
-            <tos/>
-            <shaper1/>
-            <shaper2/>
-            <description>Default allow LAN IPv6 to any rule</description>
-            <audit/>
-          </rule>
           <rule uuid="b323bd0f-0273-4aad-b379-735e5b5fef2a">
             <enabled>1</enabled>
             <statetype>keep</statetype>
@@ -426,7 +391,7 @@
             <action>pass</action>
             <quick>1</quick>
             <interfacenot>0</interfacenot>
-            <interface>lan</interface>
+            <interface>opt2</interface>
             <received-on-not>0</received-on-not>
             <received-on/>
             <direction>in</direction>
@@ -444,7 +409,7 @@
             <gateway/>
             <replyto/>
             <disablereplyto>0</disablereplyto>
-            <log>0</log>
+            <log>1</log>
             <allowopts>0</allowopts>
             <nosync>0</nosync>
             <nopfsync>0</nopfsync>
@@ -477,7 +442,7 @@
             <shaper1/>
             <shaper2/>
             <description>Admin full access</description>
-            <audit/>
+            <audit>REDACTED</audit>
           </rule>
           <rule uuid="1fd38789-b35c-496b-8932-e30735283a59">
             <enabled>1</enabled>
@@ -487,7 +452,7 @@
             <action>pass</action>
             <quick>1</quick>
             <interfacenot>0</interfacenot>
-            <interface>lan</interface>
+            <interface>opt2,opt5,opt4,opt3,opt1,opt7,opt6,opt8,opt10</interface>
             <received-on-not>0</received-on-not>
             <received-on/>
             <direction>in</direction>
@@ -498,7 +463,7 @@
             <source_net>any</source_net>
             <source_not>0</source_not>
             <source_port/>
-            <destination_net>INFRA_DEVICES</destination_net>
+            <destination_net>(self)</destination_net>
             <destination_not>0</destination_not>
             <destination_port>domain</destination_port>
             <divert-to/>
@@ -538,17 +503,17 @@
             <shaper1/>
             <shaper2/>
             <description>Allow DNS to &#x2192; ALL</description>
-            <audit/>
+            <audit>REDACTED</audit>
           </rule>
           <rule uuid="a0654903-01a9-417a-83c2-cb78d515729a">
             <enabled>1</enabled>
             <statetype>keep</statetype>
             <state-policy/>
-            <sequence>3811</sequence>
+            <sequence>4312</sequence>
             <action>pass</action>
             <quick>1</quick>
             <interfacenot>0</interfacenot>
-            <interface>lan</interface>
+            <interface>opt3</interface>
             <received-on-not>0</received-on-not>
             <received-on/>
             <direction>in</direction>
@@ -599,7 +564,7 @@
             <shaper1/>
             <shaper2/>
             <description>Allow hypervisor &#x2192; internet</description>
-            <audit/>
+            <audit>REDACTED</audit>
           </rule>
           <rule uuid="ad3c0da7-847a-403b-8257-4c30e528e710">
             <enabled>1</enabled>
@@ -609,7 +574,7 @@
             <action>pass</action>
             <quick>1</quick>
             <interfacenot>0</interfacenot>
-            <interface>lan</interface>
+            <interface>opt4</interface>
             <received-on-not>0</received-on-not>
             <received-on/>
             <direction>in</direction>
@@ -660,7 +625,7 @@
             <shaper1/>
             <shaper2/>
             <description>Allow homelab &#x2192; internet</description>
-            <audit/>
+            <audit>REDACTED</audit>
           </rule>
           <rule uuid="d19cf858-f6dd-4ad6-b66c-f208f40c92c9">
             <enabled>1</enabled>
@@ -670,7 +635,7 @@
             <action>pass</action>
             <quick>1</quick>
             <interfacenot>0</interfacenot>
-            <interface>lan</interface>
+            <interface>opt5</interface>
             <received-on-not>0</received-on-not>
             <received-on/>
             <direction>in</direction>
@@ -678,7 +643,7 @@
             <protocol>any</protocol>
             <icmptype/>
             <icmp6type/>
-            <source_net>LAN_DEVICES</source_net>
+            <source_net>GAMING_DEVICES</source_net>
             <source_not>0</source_not>
             <source_port/>
             <destination_net>PRIVATE_NETS</destination_net>
@@ -720,8 +685,8 @@
             <tos/>
             <shaper1/>
             <shaper2/>
-            <description>Allow lan &#x2192; internet only</description>
-            <audit/>
+            <description>Allow gaming &#x2192; internet only</description>
+            <audit>REDACTED</audit>
           </rule>
           <rule uuid="306c370e-7e4c-443d-89c1-6ef03e5dc500">
             <enabled>1</enabled>
@@ -731,7 +696,7 @@
             <action>pass</action>
             <quick>1</quick>
             <interfacenot>0</interfacenot>
-            <interface>lan</interface>
+            <interface>opt6</interface>
             <received-on-not>0</received-on-not>
             <received-on/>
             <direction>in</direction>
@@ -782,7 +747,7 @@
             <shaper1/>
             <shaper2/>
             <description>Allow mobile &#x2192; internet only</description>
-            <audit/>
+            <audit>REDACTED</audit>
           </rule>
           <rule uuid="ed0b7d2c-1f95-47e0-bd4d-c8761b069534">
             <enabled>1</enabled>
@@ -792,7 +757,7 @@
             <action>pass</action>
             <quick>1</quick>
             <interfacenot>0</interfacenot>
-            <interface>lan</interface>
+            <interface>opt7</interface>
             <received-on-not>0</received-on-not>
             <received-on/>
             <direction>in</direction>
@@ -843,7 +808,7 @@
             <shaper1/>
             <shaper2/>
             <description>Allow iot &#x2192; internet only</description>
-            <audit/>
+            <audit>REDACTED</audit>
           </rule>
           <rule uuid="20d9b1eb-d042-48ca-b039-9cdb88efcfa7">
             <enabled>1</enabled>
@@ -853,7 +818,7 @@
             <action>pass</action>
             <quick>1</quick>
             <interfacenot>0</interfacenot>
-            <interface>lan</interface>
+            <interface>opt8</interface>
             <received-on-not>0</received-on-not>
             <received-on/>
             <direction>in</direction>
@@ -904,7 +869,7 @@
             <shaper1/>
             <shaper2/>
             <description>Allow rest &#x2192; internet only</description>
-            <audit/>
+            <audit>REDACTED</audit>
           </rule>
           <rule uuid="73819834-2923-41bd-8304-c8b2b996b66f">
             <enabled>1</enabled>
@@ -914,7 +879,7 @@
             <action>block</action>
             <quick>1</quick>
             <interfacenot>0</interfacenot>
-            <interface>lan</interface>
+            <interface>opt2,opt5,opt4,opt3,opt1,opt7,opt6,opt8,opt10</interface>
             <received-on-not>0</received-on-not>
             <received-on/>
             <direction>in</direction>
@@ -965,14 +930,75 @@
             <shaper1/>
             <shaper2/>
             <description>Block outside DNS-over-TLS</description>
-            <audit>eyJjcmVhdGVkIjp7InVzZXJuYW1lIjoiYnVuay5tb3JlbGFuZEAxOTIuMTY4LjAuMTEiLCJ0aW1lIjoiMTc5Mjg3NDc0NS4xNyIsImRlc2NyaXB0aW9uIjoiXC9hcGlcL2FwaS5waHAgbWFkZSBjaGFuZ2VzIn0sInVwZGF0ZWQiOnsidXNlcm5hbWUiOiJidW5rLm1vcmVsYW5kQDE5Mi4xNjguMC4xMSIsInRpbWUiOiIxNzkyODc1MTUyLjg1IiwiZGVzY3JpcHRpb24iOiJcL2FwaVwvYXBpLnBocCBtYWRlIGNoYW5nZXMifSwidXNlcmRhdGEiOnsibm90ZSI6IiJ9fQ==</audit>
+            <audit>REDACTED</audit>
+          </rule>
+          <rule uuid="b633a3a7-56f9-4161-95c8-26ec83fcdefa">
+            <enabled>1</enabled>
+            <statetype>keep</statetype>
+            <state-policy/>
+            <sequence>212</sequence>
+            <action>pass</action>
+            <quick>1</quick>
+            <interfacenot>0</interfacenot>
+            <interface>opt2,opt5,opt4,opt3,opt1,opt7,opt6,opt8,opt10</interface>
+            <received-on-not>0</received-on-not>
+            <received-on/>
+            <direction>in</direction>
+            <ipprotocol>inet</ipprotocol>
+            <protocol>UDP</protocol>
+            <icmptype/>
+            <icmp6type/>
+            <source_net>any</source_net>
+            <source_not>0</source_not>
+            <source_port/>
+            <destination_net>(self)</destination_net>
+            <destination_not>0</destination_not>
+            <destination_port>ntp</destination_port>
+            <divert-to/>
+            <gateway/>
+            <replyto/>
+            <disablereplyto>0</disablereplyto>
+            <log>0</log>
+            <allowopts>0</allowopts>
+            <nosync>0</nosync>
+            <nopfsync>0</nopfsync>
+            <statetimeout/>
+            <udp-first/>
+            <udp-multiple/>
+            <udp-single/>
+            <max-src-nodes/>
+            <max-src-states/>
+            <max-src-conn/>
+            <max/>
+            <max-src-conn-rate/>
+            <max-src-conn-rates/>
+            <max-pkt-rate-number/>
+            <max-pkt-rate-seconds/>
+            <overload/>
+            <adaptivestart/>
+            <adaptiveend/>
+            <prio/>
+            <set-prio/>
+            <set-prio-low/>
+            <tag/>
+            <tagged/>
+            <tcpflags1/>
+            <tcpflags2/>
+            <tcpflags_any>0</tcpflags_any>
+            <categories/>
+            <sched/>
+            <tos/>
+            <shaper1/>
+            <shaper2/>
+            <description>Allow NTP to firewall</description>
+            <audit>REDACTED</audit>
           </rule>
         </rules>
         <snatrules/>
         <npt/>
         <onetoone/>
       </Filter>
-      <Category version="1.0.0" persisted_at="1792809754.84" description="Firewall categories">
+      <Category version="1.0.0" persisted_at="1793415829.53" description="Firewall categories">
         <categories>
           <category uuid="996712b8-0c86-440d-b93b-404f5ec3b874">
             <name>INFRA_DEVICES</name>
@@ -995,7 +1021,7 @@
             <color>1b5e20</color>
           </category>
           <category uuid="d7c67575-334c-47ae-b183-3145077d18ea">
-            <name>LAN_DEVICES</name>
+            <name>GAMING_DEVICES</name>
             <auto>0</auto>
             <color>550055</color>
           </category>
@@ -1014,14 +1040,9 @@
             <auto>0</auto>
             <color>800000</color>
           </category>
-          <category uuid="29d38428-6833-4194-a942-f880a1219e7c">
-            <name>NETWORK_DEVICES</name>
-            <auto>0</auto>
-            <color>00bcd4</color>
-          </category>
         </categories>
       </Category>
-      <Alias version="1.0.1" persisted_at="1792809774.80" description="Firewall aliases">
+      <Alias version="1.0.1" persisted_at="1793417095.40" description="Firewall aliases">
         <geoip>
           <url/>
         </geoip>
@@ -1035,7 +1056,8 @@
             <interface/>
             <counters>0</counters>
             <updatefreq/>
-            <content>192.168.0.1</content>
+            <content>10.0.10.1
+10.0.10.11-10.0.10.254</content>
             <password/>
             <username/>
             <authtype/>
@@ -1052,13 +1074,13 @@
             <interface/>
             <counters>0</counters>
             <updatefreq/>
-            <content>192.168.0.2-192.168.0.10</content>
+            <content>10.0.30.11-10.0.30.254</content>
             <password/>
             <username/>
             <authtype/>
             <expire/>
             <categories>8934b7e5-3fd4-4650-bf95-052ea16b14af</categories>
-            <description>VLAN 20</description>
+            <description>VLAN 30</description>
           </alias>
           <alias uuid="a747388b-888c-4470-a589-e4c294111dbd">
             <enabled>1</enabled>
@@ -1069,13 +1091,13 @@
             <interface/>
             <counters>0</counters>
             <updatefreq/>
-            <content>192.168.0.11-192.168.0.20</content>
+            <content>10.0.20.11-10.0.20.254</content>
             <password/>
             <username/>
             <authtype/>
             <expire/>
             <categories>f7700232-2fb8-40f3-8b8f-0fa54c425634</categories>
-            <description>VLAN 30</description>
+            <description>VLAN 20</description>
           </alias>
           <alias uuid="5c39cfee-7185-4c75-b203-2da66b3423ac">
             <enabled>1</enabled>
@@ -1086,7 +1108,7 @@
             <interface/>
             <counters>0</counters>
             <updatefreq/>
-            <content>192.168.0.21-192.168.0.40</content>
+            <content>10.0.40.11-10.0.40.254</content>
             <password/>
             <username/>
             <authtype/>
@@ -1096,14 +1118,14 @@
           </alias>
           <alias uuid="c72ffad8-42c6-421a-984e-600d311c6e8d">
             <enabled>1</enabled>
-            <name>LAN_DEVICES</name>
+            <name>GAMING_DEVICES</name>
             <type>host</type>
             <path_expression/>
             <proto/>
             <interface/>
             <counters>0</counters>
             <updatefreq/>
-            <content>192.168.0.41-192.168.0.60</content>
+            <content>10.0.50.11-10.0.50.254</content>
             <password/>
             <username/>
             <authtype/>
@@ -1120,7 +1142,7 @@
             <interface/>
             <counters>0</counters>
             <updatefreq/>
-            <content>192.168.0.61-192.168.0.80</content>
+            <content>10.0.60.11-10.0.60.254</content>
             <password/>
             <username/>
             <authtype/>
@@ -1137,7 +1159,7 @@
             <interface/>
             <counters>0</counters>
             <updatefreq/>
-            <content>192.168.0.81-192.168.0.100</content>
+            <content>10.0.70.11-10.0.70.254</content>
             <password/>
             <username/>
             <authtype/>
@@ -1154,7 +1176,7 @@
             <interface/>
             <counters>0</counters>
             <updatefreq/>
-            <content>192.168.0.101-192.168.0.200</content>
+            <content>10.0.80.11-10.0.80.254</content>
             <password/>
             <username/>
             <authtype/>
@@ -1183,26 +1205,9 @@
             <categories/>
             <description>RFC1918 private ranges</description>
           </alias>
-          <alias uuid="8c74f563-63cc-4279-a5b5-90704f196c28">
-            <enabled>1</enabled>
-            <name>NETWORK_DEVICES</name>
-            <type>host</type>
-            <path_expression/>
-            <proto/>
-            <interface/>
-            <counters>0</counters>
-            <updatefreq/>
-            <content>192.168.0.201-192.168.0.250</content>
-            <password/>
-            <username/>
-            <authtype/>
-            <expire/>
-            <categories>29d38428-6833-4194-a942-f880a1219e7c</categories>
-            <description/>
-          </alias>
         </aliases>
       </Alias>
-      <Lvtemplate version="0.0.1" persisted_at="1784649828.46" description="Firewall Live View filter templates">
+      <Lvtemplate version="1.0.0" persisted_at="1793381382.67" description="Firewall Live View filter templates">
         <templates/>
       </Lvtemplate>
     </Firewall>
@@ -1458,7 +1463,7 @@
       <VTIs/>
       <SPDs/>
     </Swanctl>
-    <IPsec version="1.0.5" persisted_at="1784649828.05" description="IPsec settings">
+    <IPsec version="1.0.6" persisted_at="1793381382.72" description="IPsec settings">
       <general>
         <enabled/>
         <preferred_oldsa>0</preferred_oldsa>
@@ -1483,6 +1488,7 @@
         <retransmit_jitter/>
         <retransmit_limit/>
         <reqid_base/>
+        <retry_initiate_interval>30</retry_initiate_interval>
         <syslog>
           <daemon>
             <ike_name>1</ike_name>
@@ -1664,11 +1670,11 @@
         <pd_pools/>
         <ha_peers/>
       </dhcp6>
-      <dhcp4 version="1.0.7" persisted_at="1792875538.06" description="Kea DHCPv4 configuration">
+      <dhcp4 version="1.0.7" persisted_at="1793416515.32" description="Kea DHCPv4 configuration">
         <general>
           <enabled>1</enabled>
           <manual_config>0</manual_config>
-          <interfaces>lan</interfaces>
+          <interfaces>opt2,opt5,opt4,opt3,opt7,opt6,opt8,opt10</interfaces>
           <service_sockets_max_retries/>
           <service_sockets_retry_wait_time/>
           <valid_lifetime>86400</valid_lifetime>
@@ -1691,20 +1697,20 @@
           <max_unacked_clients>2</max_unacked_clients>
         </ha>
         <subnets>
-          <subnet4 uuid="e550ffc3-33c2-4836-8cb9-a503b83aea8d">
-            <subnet_id>1</subnet_id>
-            <subnet>192.168.0.0/24</subnet>
+          <subnet4 uuid="b3c8e40c-49ed-44ed-99b4-c30ebe7e1162">
+            <subnet_id>2</subnet_id>
+            <subnet>10.0.20.0/24</subnet>
             <valid_lifetime/>
             <next_server/>
-            <option_data_autocollect>0</option_data_autocollect>
+            <option_data_autocollect>1</option_data_autocollect>
             <option_data>
-              <domain_name_servers>192.168.0.1</domain_name_servers>
+              <domain_name_servers>10.0.20.1</domain_name_servers>
               <domain_search/>
-              <routers>192.168.0.1</routers>
+              <routers>10.0.20.1</routers>
               <static_routes/>
               <classless_static_route/>
               <domain_name/>
-              <ntp_servers/>
+              <ntp_servers>10.0.20.1</ntp_servers>
               <time_servers/>
               <tftp_server_name/>
               <boot_file_name/>
@@ -1712,9 +1718,9 @@
               <v4_dnr/>
             </option_data>
             <option/>
-            <match-client-id>0</match-client-id>
+            <match-client-id>1</match-client-id>
             <allocator/>
-            <pools>192.168.0.41-192.168.0.200</pools>
+            <pools>10.0.20.101-10.0.20.200</pools>
             <ping_check>0</ping_check>
             <ddns_forward_zone/>
             <ddns_reverse_zone/>
@@ -1728,35 +1734,286 @@
             <ddns_override_client_update>0</ddns_override_client_update>
             <ddns_update_on_renew>0</ddns_update_on_renew>
             <ddns_conflict_resolution_mode/>
-            <description>Mobile/IoT/LAN/Rest dynamic pool</description>
+            <description>ADMIN_DEVICES</description>
           </subnet4>
-        </subnets>
-        <reservations>
-          <reservation uuid="67139b3d-135c-4f04-a727-cc7761b2f8ec">
-            <subnet>e550ffc3-33c2-4836-8cb9-a503b83aea8d</subnet>
-            <ip_address>192.168.0.11</ip_address>
-            <hw_address>REDACTED</hw_address>
-            <client_id/>
-            <hostname>admin-pc-01</hostname>
-            <description/>
+          <subnet4 uuid="01325314-ee88-45a6-af58-1191bc6da077">
+            <subnet_id>3</subnet_id>
+            <subnet>10.0.30.0/24</subnet>
+            <valid_lifetime/>
             <next_server/>
+            <option_data_autocollect>1</option_data_autocollect>
             <option_data>
-              <domain_name_servers/>
+              <domain_name_servers>10.0.30.1</domain_name_servers>
               <domain_search/>
-              <routers/>
+              <routers>10.0.30.1</routers>
               <static_routes/>
               <classless_static_route/>
               <domain_name/>
-              <ntp_servers/>
+              <ntp_servers>10.0.30.1</ntp_servers>
               <time_servers/>
               <tftp_server_name/>
               <boot_file_name/>
+              <v6_only_preferred/>
+              <v4_dnr/>
             </option_data>
             <option/>
-          </reservation>
-          <reservation uuid="5e44a12a-628f-4c51-9a29-9916398c1dfd">
-            <subnet>e550ffc3-33c2-4836-8cb9-a503b83aea8d</subnet>
-            <ip_address>192.168.0.12</ip_address>
+            <match-client-id>1</match-client-id>
+            <allocator/>
+            <pools>10.0.30.101-10.0.30.200</pools>
+            <ping_check>0</ping_check>
+            <ddns_forward_zone/>
+            <ddns_reverse_zone/>
+            <ddns_qualifying_suffix/>
+            <ddns_dns_server/>
+            <ddns_dns_port/>
+            <ddns_domain_key_name/>
+            <ddns_domain_key_secret/>
+            <ddns_domain_key_algorithm/>
+            <ddns_override_no_update>0</ddns_override_no_update>
+            <ddns_override_client_update>0</ddns_override_client_update>
+            <ddns_update_on_renew>0</ddns_update_on_renew>
+            <ddns_conflict_resolution_mode/>
+            <description>HYPERVISOR_DEVICES</description>
+          </subnet4>
+          <subnet4 uuid="1ace6068-e86c-433b-9533-170ae215c55c">
+            <subnet_id>4</subnet_id>
+            <subnet>10.0.40.0/24</subnet>
+            <valid_lifetime/>
+            <next_server/>
+            <option_data_autocollect>1</option_data_autocollect>
+            <option_data>
+              <domain_name_servers>10.0.40.1</domain_name_servers>
+              <domain_search/>
+              <routers>10.0.40.1</routers>
+              <static_routes/>
+              <classless_static_route/>
+              <domain_name/>
+              <ntp_servers>10.0.40.1</ntp_servers>
+              <time_servers/>
+              <tftp_server_name/>
+              <boot_file_name/>
+              <v6_only_preferred/>
+              <v4_dnr/>
+            </option_data>
+            <option/>
+            <match-client-id>1</match-client-id>
+            <allocator/>
+            <pools>10.0.40.101-10.0.40.200</pools>
+            <ping_check>0</ping_check>
+            <ddns_forward_zone/>
+            <ddns_reverse_zone/>
+            <ddns_qualifying_suffix/>
+            <ddns_dns_server/>
+            <ddns_dns_port/>
+            <ddns_domain_key_name/>
+            <ddns_domain_key_secret/>
+            <ddns_domain_key_algorithm/>
+            <ddns_override_no_update>0</ddns_override_no_update>
+            <ddns_override_client_update>0</ddns_override_client_update>
+            <ddns_update_on_renew>0</ddns_update_on_renew>
+            <ddns_conflict_resolution_mode/>
+            <description>HOMELAB_DEVICES</description>
+          </subnet4>
+          <subnet4 uuid="203e7571-a2de-4559-8962-832b8108128a">
+            <subnet_id>5</subnet_id>
+            <subnet>10.0.60.0/24</subnet>
+            <valid_lifetime/>
+            <next_server/>
+            <option_data_autocollect>1</option_data_autocollect>
+            <option_data>
+              <domain_name_servers>10.0.60.1</domain_name_servers>
+              <domain_search/>
+              <routers>10.0.60.1</routers>
+              <static_routes/>
+              <classless_static_route/>
+              <domain_name/>
+              <ntp_servers>10.0.60.1</ntp_servers>
+              <time_servers/>
+              <tftp_server_name/>
+              <boot_file_name/>
+              <v6_only_preferred/>
+              <v4_dnr/>
+            </option_data>
+            <option/>
+            <match-client-id>1</match-client-id>
+            <allocator/>
+            <pools>10.0.60.101-10.0.60.200</pools>
+            <ping_check>0</ping_check>
+            <ddns_forward_zone/>
+            <ddns_reverse_zone/>
+            <ddns_qualifying_suffix/>
+            <ddns_dns_server/>
+            <ddns_dns_port/>
+            <ddns_domain_key_name/>
+            <ddns_domain_key_secret/>
+            <ddns_domain_key_algorithm/>
+            <ddns_override_no_update>0</ddns_override_no_update>
+            <ddns_override_client_update>0</ddns_override_client_update>
+            <ddns_update_on_renew>0</ddns_update_on_renew>
+            <ddns_conflict_resolution_mode/>
+            <description>MOBILE_DEVICES</description>
+          </subnet4>
+          <subnet4 uuid="60264644-e5b6-473f-bd38-ebfdb6dc1594">
+            <subnet_id>6</subnet_id>
+            <subnet>10.0.50.0/24</subnet>
+            <valid_lifetime/>
+            <next_server/>
+            <option_data_autocollect>1</option_data_autocollect>
+            <option_data>
+              <domain_name_servers>10.0.50.1</domain_name_servers>
+              <domain_search/>
+              <routers>10.0.50.1</routers>
+              <static_routes/>
+              <classless_static_route/>
+              <domain_name/>
+              <ntp_servers>10.0.50.1</ntp_servers>
+              <time_servers/>
+              <tftp_server_name/>
+              <boot_file_name/>
+              <v6_only_preferred/>
+              <v4_dnr/>
+            </option_data>
+            <option/>
+            <match-client-id>1</match-client-id>
+            <allocator/>
+            <pools>10.0.50.101-10.0.50.200</pools>
+            <ping_check>0</ping_check>
+            <ddns_forward_zone/>
+            <ddns_reverse_zone/>
+            <ddns_qualifying_suffix/>
+            <ddns_dns_server/>
+            <ddns_dns_port/>
+            <ddns_domain_key_name/>
+            <ddns_domain_key_secret/>
+            <ddns_domain_key_algorithm/>
+            <ddns_override_no_update>0</ddns_override_no_update>
+            <ddns_override_client_update>0</ddns_override_client_update>
+            <ddns_update_on_renew>0</ddns_update_on_renew>
+            <ddns_conflict_resolution_mode/>
+            <description>GAMING_DEVICES</description>
+          </subnet4>
+          <subnet4 uuid="803c6113-f146-4a19-8784-0347a86e0e6d">
+            <subnet_id>1</subnet_id>
+            <subnet>10.0.70.0/24</subnet>
+            <valid_lifetime/>
+            <next_server/>
+            <option_data_autocollect>1</option_data_autocollect>
+            <option_data>
+              <domain_name_servers>10.0.70.1</domain_name_servers>
+              <domain_search/>
+              <routers>10.0.70.1</routers>
+              <static_routes/>
+              <classless_static_route/>
+              <domain_name/>
+              <ntp_servers>10.0.70.1</ntp_servers>
+              <time_servers/>
+              <tftp_server_name/>
+              <boot_file_name/>
+              <v6_only_preferred/>
+              <v4_dnr/>
+            </option_data>
+            <option/>
+            <match-client-id>1</match-client-id>
+            <allocator/>
+            <pools>10.0.70.101-10.0.70.200</pools>
+            <ping_check>0</ping_check>
+            <ddns_forward_zone/>
+            <ddns_reverse_zone/>
+            <ddns_qualifying_suffix/>
+            <ddns_dns_server/>
+            <ddns_dns_port/>
+            <ddns_domain_key_name/>
+            <ddns_domain_key_secret/>
+            <ddns_domain_key_algorithm/>
+            <ddns_override_no_update>0</ddns_override_no_update>
+            <ddns_override_client_update>0</ddns_override_client_update>
+            <ddns_update_on_renew>0</ddns_update_on_renew>
+            <ddns_conflict_resolution_mode/>
+            <description>IOT_DEVICES</description>
+          </subnet4>
+          <subnet4 uuid="b6213560-cd04-4344-bbd2-d985c10e9eaf">
+            <subnet_id>7</subnet_id>
+            <subnet>10.0.80.0/24</subnet>
+            <valid_lifetime/>
+            <next_server/>
+            <option_data_autocollect>1</option_data_autocollect>
+            <option_data>
+              <domain_name_servers>10.0.80.1</domain_name_servers>
+              <domain_search/>
+              <routers>10.0.80.1</routers>
+              <static_routes/>
+              <classless_static_route/>
+              <domain_name/>
+              <ntp_servers>10.0.80.1</ntp_servers>
+              <time_servers/>
+              <tftp_server_name/>
+              <boot_file_name/>
+              <v6_only_preferred/>
+              <v4_dnr/>
+            </option_data>
+            <option/>
+            <match-client-id>1</match-client-id>
+            <allocator/>
+            <pools>10.0.80.101-10.0.80.200</pools>
+            <ping_check>0</ping_check>
+            <ddns_forward_zone/>
+            <ddns_reverse_zone/>
+            <ddns_qualifying_suffix/>
+            <ddns_dns_server/>
+            <ddns_dns_port/>
+            <ddns_domain_key_name/>
+            <ddns_domain_key_secret/>
+            <ddns_domain_key_algorithm/>
+            <ddns_override_no_update>0</ddns_override_no_update>
+            <ddns_override_client_update>0</ddns_override_client_update>
+            <ddns_update_on_renew>0</ddns_update_on_renew>
+            <ddns_conflict_resolution_mode/>
+            <description>REST_DEVICES</description>
+          </subnet4>
+          <subnet4 uuid="f92f5d9f-7a82-4a01-8144-5530422b1615">
+            <subnet_id>8</subnet_id>
+            <subnet>10.0.100.0/24</subnet>
+            <valid_lifetime/>
+            <next_server/>
+            <option_data_autocollect>1</option_data_autocollect>
+            <option_data>
+              <domain_name_servers>10.0.100.1</domain_name_servers>
+              <domain_search/>
+              <routers>10.0.100.1</routers>
+              <static_routes/>
+              <classless_static_route/>
+              <domain_name/>
+              <ntp_servers>10.0.100.1</ntp_servers>
+              <time_servers/>
+              <tftp_server_name/>
+              <boot_file_name/>
+              <v6_only_preferred/>
+              <v4_dnr/>
+            </option_data>
+            <option/>
+            <match-client-id>1</match-client-id>
+            <allocator/>
+            <pools>10.0.100.101-10.0.100.200</pools>
+            <ping_check>0</ping_check>
+            <ddns_forward_zone/>
+            <ddns_reverse_zone/>
+            <ddns_qualifying_suffix/>
+            <ddns_dns_server/>
+            <ddns_dns_port/>
+            <ddns_domain_key_name/>
+            <ddns_domain_key_secret/>
+            <ddns_domain_key_algorithm/>
+            <ddns_override_no_update>0</ddns_override_no_update>
+            <ddns_override_client_update>0</ddns_override_client_update>
+            <ddns_update_on_renew>0</ddns_update_on_renew>
+            <ddns_conflict_resolution_mode/>
+            <description>SERVER_DEVICES</description>
+          </subnet4>
+        </subnets>
+        <reservations>
+          <reservation uuid="e8bd09ca-0dc2-4522-8be2-6c2676990301">
+            <subnet>b3c8e40c-49ed-44ed-99b4-c30ebe7e1162</subnet>
+            <ip_address>10.0.20.12</ip_address>
             <hw_address>REDACTED</hw_address>
             <client_id/>
             <hostname>admin-pc-02</hostname>
@@ -1776,12 +2033,12 @@
             </option_data>
             <option/>
           </reservation>
-          <reservation uuid="1a0224b7-ea5d-49f9-8781-8bc076ad31c2">
-            <subnet>e550ffc3-33c2-4836-8cb9-a503b83aea8d</subnet>
-            <ip_address>192.168.0.21</ip_address>
+          <reservation uuid="b3970e87-f0d9-4137-b036-34be44b247b8">
+            <subnet>b3c8e40c-49ed-44ed-99b4-c30ebe7e1162</subnet>
+            <ip_address>10.0.20.11</ip_address>
             <hw_address>REDACTED</hw_address>
             <client_id/>
-            <hostname>oracle-DBA26</hostname>
+            <hostname>admin-pc-01</hostname>
             <description/>
             <next_server/>
             <option_data>
@@ -1798,13 +2055,13 @@
             </option_data>
             <option/>
           </reservation>
-          <reservation uuid="a7e2bf77-79c4-40a7-bf40-5f7867b67264">
-            <subnet>e550ffc3-33c2-4836-8cb9-a503b83aea8d</subnet>
-            <ip_address>192.168.0.22</ip_address>
+          <reservation uuid="7bbbd172-6f7d-459d-ab3c-7107f5da53aa">
+            <subnet>1ace6068-e86c-433b-9533-170ae215c55c</subnet>
+            <ip_address>10.0.40.12</ip_address>
             <hw_address>REDACTED</hw_address>
             <client_id/>
-            <hostname>dangelo-barksdale</hostname>
-            <description/>
+            <hostname>oracle-dba26</hostname>
+            <description>vm103</description>
             <next_server/>
             <option_data>
               <domain_name_servers/>
@@ -1820,35 +2077,79 @@
             </option_data>
             <option/>
           </reservation>
-          <reservation uuid="d6abd86b-b8f7-4e22-9783-e7780f7db2ba">
-            <subnet>e550ffc3-33c2-4836-8cb9-a503b83aea8d</subnet>
-            <ip_address>192.168.0.201</ip_address>
-            <hw_address>REDACTED</hw_address>
-            <client_id/>
-            <hostname>TL-SG108E</hostname>
-            <description/>
-            <next_server/>
-            <option_data>
-              <domain_name_servers/>
-              <domain_search/>
-              <routers/>
-              <static_routes/>
-              <classless_static_route/>
-              <domain_name/>
-              <ntp_servers/>
-              <time_servers/>
-              <tftp_server_name/>
-              <boot_file_name/>
-            </option_data>
-            <option/>
-          </reservation>
-          <reservation uuid="594791bf-f0e1-4a6c-8ba8-96ac4bdb3bf7">
-            <subnet>e550ffc3-33c2-4836-8cb9-a503b83aea8d</subnet>
-            <ip_address>192.168.0.202</ip_address>
+          <reservation uuid="2608e949-9f3f-40c2-b0f3-f0557a05eb76">
+            <subnet>203e7571-a2de-4559-8962-832b8108128a</subnet>
+            <ip_address>10.0.60.11</ip_address>
             <hw_address>REDACTED</hw_address>
             <client_id/>
             <hostname>asus-ap</hostname>
-            <description/>
+            <description>RT-AC51U, AP mode</description>
+            <next_server/>
+            <option_data>
+              <domain_name_servers/>
+              <domain_search/>
+              <routers/>
+              <static_routes/>
+              <classless_static_route/>
+              <domain_name/>
+              <ntp_servers/>
+              <time_servers/>
+              <tftp_server_name/>
+              <boot_file_name/>
+            </option_data>
+            <option/>
+          </reservation>
+          <reservation uuid="e389a145-962d-425b-9234-bb14f2b5f34e">
+            <subnet>60264644-e5b6-473f-bd38-ebfdb6dc1594</subnet>
+            <ip_address>10.0.50.11</ip_address>
+            <hw_address>REDACTED</hw_address>
+            <client_id/>
+            <hostname>tl-sg108e</hostname>
+            <description>LAN party switch (VLAN 50)</description>
+            <next_server/>
+            <option_data>
+              <domain_name_servers/>
+              <domain_search/>
+              <routers/>
+              <static_routes/>
+              <classless_static_route/>
+              <domain_name/>
+              <ntp_servers/>
+              <time_servers/>
+              <tftp_server_name/>
+              <boot_file_name/>
+            </option_data>
+            <option/>
+          </reservation>
+          <reservation uuid="9311546a-0aa1-46ba-a82e-0dff5e2b2177">
+            <subnet>1ace6068-e86c-433b-9533-170ae215c55c</subnet>
+            <ip_address>10.0.40.11</ip_address>
+            <hw_address>REDACTED</hw_address>
+            <client_id/>
+            <hostname>dangelo-barksdale</hostname>
+            <description>vm101</description>
+            <next_server/>
+            <option_data>
+              <domain_name_servers/>
+              <domain_search/>
+              <routers/>
+              <static_routes/>
+              <classless_static_route/>
+              <domain_name/>
+              <ntp_servers/>
+              <time_servers/>
+              <tftp_server_name/>
+              <boot_file_name/>
+            </option_data>
+            <option/>
+          </reservation>
+          <reservation uuid="51b9611a-87c9-40ee-b510-3e07bba71670">
+            <subnet>1ace6068-e86c-433b-9533-170ae215c55c</subnet>
+            <ip_address>10.0.40.13</ip_address>
+            <hw_address>REDACTED</hw_address>
+            <client_id/>
+            <hostname>oracle-old</hostname>
+            <description>vm102</description>
             <next_server/>
             <option_data>
               <domain_name_servers/>
@@ -1897,7 +2198,7 @@
       </general>
     </Hostwatch>
     <radvd version="1.0.1" persisted_at="1784649828.16" description="Radvd configuration"/>
-    <Syslog version="1.0.2" persisted_at="1792873092.08" description="System logging settings">
+    <Syslog version="1.0.2" persisted_at="1793472270.55" description="System logging settings">
       <general>
         <enabled>1</enabled>
         <loglocal>1</loglocal>
@@ -1911,7 +2212,7 @@
           <program/>
           <level/>
           <facility/>
-          <hostname>oracle-DBA26.internal</hostname>
+          <hostname>10.0.40.13</hostname>
           <certificate/>
           <port>514</port>
           <rfc5424>0</rfc5424>
@@ -2920,12 +3221,12 @@
       <activeTimeout>1800</activeTimeout>
       <inactiveTimeout>15</inactiveTimeout>
     </Netflow>
-    <unboundplus version="1.0.15" persisted_at="1792809333.08" description="Unbound configuration">
+    <unboundplus version="1.0.15" persisted_at="1793750529.61" description="Unbound configuration">
       <general>
         <enabled>1</enabled>
         <port>53</port>
         <stats>1</stats>
-        <active_interface>lan</active_interface>
+        <active_interface>opt2,opt5,opt4,opt3,opt1,opt7,opt6,opt8,opt10</active_interface>
         <dnssec>1</dnssec>
         <dns64>0</dns64>
         <dns64prefix/>
@@ -2934,7 +3235,7 @@
         <regdhcpdomain/>
         <regdhcpstatic>0</regdhcpstatic>
         <noreglladdr6>0</noreglladdr6>
-        <noregrecords>0</noregrecords>
+        <noregrecords>1</noregrecords>
         <txtsupport>0</txtsupport>
         <cacheflush>1</cacheflush>
         <safesearch>0</safesearch>
@@ -3031,13 +3332,13 @@
       <hosts>
         <host uuid="0d16072d-d4e5-4fdf-b553-df44bbf199da">
           <enabled>1</enabled>
-          <hostname>oracle-DBA26</hostname>
+          <hostname>oracle-dba26</hostname>
           <domain>internal</domain>
           <rr>A</rr>
           <mxprio/>
           <mx/>
           <ttl/>
-          <server>192.168.0.21</server>
+          <server>10.0.40.12</server>
           <txtdata/>
           <addptr>1</addptr>
           <description/>
@@ -3050,7 +3351,7 @@
           <mxprio/>
           <mx/>
           <ttl/>
-          <server>192.168.0.22</server>
+          <server>10.0.40.11</server>
           <txtdata/>
           <addptr>1</addptr>
           <description/>
@@ -3063,19 +3364,71 @@
           <mxprio/>
           <mx/>
           <ttl/>
-          <server>192.168.0.2</server>
+          <server>10.0.30.11</server>
           <txtdata/>
           <addptr>1</addptr>
           <description/>
+        </host>
+        <host uuid="4f228080-a70c-448a-9cc6-104550d8c929">
+          <enabled>1</enabled>
+          <hostname>stringer-bell</hostname>
+          <domain>internal</domain>
+          <rr>A</rr>
+          <mxprio/>
+          <mx/>
+          <ttl/>
+          <server>10.0.10.11</server>
+          <txtdata/>
+          <addptr>1</addptr>
+          <description>sg3210x-m2 switch</description>
+        </host>
+        <host uuid="6aa0a4bc-81fd-4882-82ae-b84dfa33f28e">
+          <enabled>1</enabled>
+          <hostname>asus-ap</hostname>
+          <domain>internal</domain>
+          <rr>A</rr>
+          <mxprio/>
+          <mx/>
+          <ttl/>
+          <server>10.0.60.11</server>
+          <txtdata/>
+          <addptr>1</addptr>
+          <description>RT-AC51U, AP mode</description>
+        </host>
+        <host uuid="60d634fe-41aa-41a7-86c8-969e12a52de3">
+          <enabled>1</enabled>
+          <hostname>tl-sg108e</hostname>
+          <domain>internal</domain>
+          <rr>A</rr>
+          <mxprio/>
+          <mx/>
+          <ttl/>
+          <server>10.0.50.11</server>
+          <txtdata/>
+          <addptr>1</addptr>
+          <description>LAN party switch (VLAN 50)</description>
+        </host>
+        <host uuid="266ca8c1-056f-4258-adc1-becadf32404f">
+          <enabled>1</enabled>
+          <hostname>avon-barksdale</hostname>
+          <domain>internal</domain>
+          <rr>A</rr>
+          <mxprio/>
+          <mx/>
+          <ttl/>
+          <server>10.0.10.1</server>
+          <txtdata/>
+          <addptr>1</addptr>
+          <description>OPNsense</description>
         </host>
       </hosts>
       <aliases/>
     </unboundplus>
   </OPNsense>
   <revision>
-    <username>sudo_user_1@192.168.0.11</username>
-    <description>/api/interfaces/settings/set made changes</description>
-    <time>1792894952.95</time>
+    <username>REDACTED</username>
+    <description>REDACTED</description>
+    <time>REDACTED</time>
   </revision>
   <ifgroups version="1.0.0" persisted_at="1784649827.45" description="Firewall interface groups"/>
   <openvpn/>
@@ -3093,7 +3446,80 @@
     <password/>
     <syncitems/>
   </hasync>
-  <vlans version="1.0.0" persisted_at="1784649827.85" description="VLAN configuration"/>
+  <vlans version="1.0.0" persisted_at="1793471720.88" description="VLAN configuration">
+    <vlan uuid="fb6ef897-29c3-4277-9ed9-8342d446952b">
+      <if>igc0</if>
+      <tag>10</tag>
+      <pcp>0</pcp>
+      <proto/>
+      <descr>INFRA_DEVICES</descr>
+      <vlanif>vlan0010</vlanif>
+    </vlan>
+    <vlan uuid="4ddaee5b-ef57-4d2b-b824-66ae254bfc8e">
+      <if>igc0</if>
+      <tag>20</tag>
+      <pcp>0</pcp>
+      <proto/>
+      <descr>ADMIN_DEVICES</descr>
+      <vlanif>vlan0020</vlanif>
+    </vlan>
+    <vlan uuid="a0b83dc3-d6d0-4282-b1d2-3ae99d89be16">
+      <if>igc0</if>
+      <tag>30</tag>
+      <pcp>0</pcp>
+      <proto/>
+      <descr>HYPERVISOR_DEVICES</descr>
+      <vlanif>vlan0030</vlanif>
+    </vlan>
+    <vlan uuid="fc3c549b-b62d-4e27-8be0-a75103c70bc3">
+      <if>igc0</if>
+      <tag>40</tag>
+      <pcp>0</pcp>
+      <proto/>
+      <descr>HOMELAB_DEVICES</descr>
+      <vlanif>vlan0040</vlanif>
+    </vlan>
+    <vlan uuid="a60c20e1-39ae-4ae8-928a-0514b65dcb22">
+      <if>igc0</if>
+      <tag>50</tag>
+      <pcp>0</pcp>
+      <proto/>
+      <descr>GAMING_DEVICES</descr>
+      <vlanif>vlan0050</vlanif>
+    </vlan>
+    <vlan uuid="fe92e13a-31b7-483c-b8df-cfd1643058c9">
+      <if>igc0</if>
+      <tag>60</tag>
+      <pcp>0</pcp>
+      <proto/>
+      <descr>MOBILE_DEVICES</descr>
+      <vlanif>vlan0060</vlanif>
+    </vlan>
+    <vlan uuid="b28e4eb5-a53f-4937-ac67-5dfc8cc04d11">
+      <if>igc0</if>
+      <tag>70</tag>
+      <pcp>0</pcp>
+      <proto/>
+      <descr>IOT_DEVICES</descr>
+      <vlanif>vlan0070</vlanif>
+    </vlan>
+    <vlan uuid="4c653564-4acf-446b-a572-c6e68dbc05cf">
+      <if>igc0</if>
+      <tag>80</tag>
+      <pcp>0</pcp>
+      <proto/>
+      <descr>REST_DEVICES</descr>
+      <vlanif>vlan0080</vlanif>
+    </vlan>
+    <vlan uuid="331f2cbe-c9da-40c2-89c9-0f5a577106eb">
+      <if>igc0</if>
+      <tag>100</tag>
+      <pcp>0</pcp>
+      <proto/>
+      <descr>SERVER_DEVICES</descr>
+      <vlanif>vlan0100</vlanif>
+    </vlan>
+  </vlans>
   <virtualip version="1.0.1" persisted_at="1784649827.85" description="Virtual IP configuration"/>
   <laggs version="1.0.0" persisted_at="1784649827.97" description="LAGG devices"/>
   <gres version="1.0.0" persisted_at="1784649827.97" description="GRE devices"/>
