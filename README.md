@@ -1,8 +1,10 @@
 # Home network: OPNsense + VLANs
 
-My home lab network, which I built and maintain myself. I'm studying to become a DBA, and this lab is where I practice the infrastructure around databases: networking, firewalling, Linux and virtualization.
+My home lab network, which I built and maintain myself. I'm studying to become a DBA, and this lab is where I practice the infrastructure around databases.
 
-> **Sanitized:** [`config-sanitized.xml`](config-sanitized.xml) is the real OPNsense backup with password hashes, keys, certificates, usernames and MAC addresses removed. The README is written by hand from the running setup.
+**At a glance:** OPNsense firewall, 9 VLANs over an 802.1Q trunk, deny-by-default rules, encrypted DNS, and Proxmox VMs running Oracle Linux. **Skills:** networking, firewalling, Linux, virtualization, documentation.
+
+> **Sanitized:** [`config/config-sanitized.xml`](config/config-sanitized.xml) is the real OPNsense backup with password hashes, keys, certificates, usernames and MAC addresses removed. The README is written by hand from the running setup.
 
 ---
 
@@ -38,6 +40,12 @@ flowchart TD
 | LAN NIC  | Intel I226-V 2.5 Gbit (M.2)             | Single 802.1Q trunk to the switch      |
 | Switch   | TP-Link SG3210X-M2 (Omada, standalone)  | Layer 2 only. Routing is done by OPNsense |
 | Hypervisor | Proxmox                               | Linux VMs, incl. Oracle Linux for DB practice |
+| LAN party switch | TP-Link TL-SG108E (older unit, reused) | Connected to an untagged VLAN 50 port on the main switch, so every port on it lands in GAMING. Friends plug in for LAN gaming without reaching the rest of the network |
+
+<p>
+  <img src="images/optiplex-front.png" alt="OptiPlex firewall, front" width="45%">
+  <img src="images/optiplex-inside.png" alt="OptiPlex firewall, inside with the I226-V NIC" width="45%">
+</p>
 
 ---
 
@@ -48,7 +56,7 @@ Each VLAN is a `/24` (`10.0.<VLAN>.0/24`) with OPNsense as gateway on `.1`. Stat
 | VLAN | Name       | Purpose                         | Access                     |
 | ---- | ---------- | ------------------------------- | -------------------------- |
 | 10   | INFRA      | Firewall, switch management     | Reachable from ADMIN only  |
-| 20   | ADMIN      | My admin PCs                    | Full access                |
+| 20   | ADMIN      | My admin PCs                    | Full access (all VLANs + internet) |
 | 30   | HYPERVISOR | Proxmox host                    | Internet only              |
 | 40   | HOMELAB    | Lab VMs (Oracle Linux, logging) | Internet only              |
 | 50   | GAMING     | Gaming PCs                      | Internet only              |
@@ -67,7 +75,7 @@ On the switch, port 8 is the tagged trunk to OPNsense and port 3 carries the Pro
 
 Deny by default. Only the flows below are allowed:
 
-1. **ADMIN → any:** allow, logged.
+1. **ADMIN → any:** allow, logged. Deliberate: admin PCs manage everything.
 2. **All VLANs → firewall, DNS (53) and NTP (123):** allow.
 3. **All VLANs → any, DNS-over-TLS (853):** block, logged. This forces clients to use the firewall's resolver.
 4. **Every other VLAN → `! PRIVATE_NETS`:** allow. Internet yes, other VLANs no.
@@ -89,7 +97,7 @@ Deny by default. Only the flows below are allowed:
 
 ## Services
 
-- **DNS (Unbound):** DNSSEC, DNS-over-TLS upstream (Quad9), identity and version hidden. Local names for devices via host overrides (with PTR).
+- **DNS (Unbound):** DNSSEC validation, and all upstream queries go out encrypted with **DNS-over-TLS** to Quad9, so my ISP can't read or tamper with them. Identity and version hidden. Local names for devices via host overrides (with PTR).
 - **DHCP (Kea):** one subnet per VLAN, reservations for known devices.
 - **Traffic shaping:** fq_codel on WAN up/down to keep latency low under load.
 - **WAN:** private and bogon networks blocked. IPv6 disabled for now.
@@ -99,7 +107,7 @@ Deny by default. Only the flows below are allowed:
 
 ## IDS/IPS (Suricata)
 
-Configured but **currently off** while I tune it.
+Configured but **currently off**: enabling it on bare metal caused a lockout (see [Troubleshooting notes](#troubleshooting-notes)).
 
 | Policy                         | Action | Examples                                               |
 | ------------------------------ | ------ | ------------------------------------------------------ |
@@ -124,7 +132,7 @@ I designed and tested the setup in a **Proxmox VM** first, then moved it to bare
 - **Forcing DNS through the firewall** by blocking DNS-over-TLS (port 853), which was a technique I didn't know.
 - **Troubleshooting** why VLANs other than ADMIN had no internet after the migration.
 
-I used an AI assistant (Claude) as support during the migration, mainly to plan the order of changes so I wouldn't lose connectivity while moving from a flat network to VLANs. I made and verified every change myself, and I made sure I understood each step before applying it.
+I used an AI assistant (Claude) as support during the migration, mainly to plan the order of changes so I wouldn't lose connectivity.
 
 **What I'd do differently:** finish tuning everything in the VM before migrating. Several fixes happened on the live network that could have been solved in testing first.
 
@@ -132,7 +140,7 @@ I used an AI assistant (Claude) as support during the migration, mainly to plan 
 
 ## Troubleshooting notes
 
-**Intel I226-V on FreeBSD.** OPNsense worked as a Proxmox VM, but on bare metal the I226-V had driver issues (a known FreeBSD problem). It now runs bare metal on the I226-V.
+**IDS/IPS lockout on bare metal (open issue).** Suricata in inline IPS mode ran fine while I tuned it in a Proxmox VM. On bare metal, enabling it cut off both SSH and the web GUI, and only a hard reset brought the firewall back. Searching suggested the Intel I226-V or netmap on FreeBSD, but I haven't confirmed the cause. IDS/IPS stays off until I can test it properly. To get evidence next time, I've added remote syslog to another machine, so the logs survive a lockout.
 
 **VLAN migration.** Moving from one flat /24 to VLANs taught me:
 - OPNsense doesn't discover VLANs from the switch. Each one is created, assigned and given rules on the firewall.
@@ -185,6 +193,12 @@ Snapshots live on the same disk, so they protect against bad changes, not disk f
 4. Remote access VPN with its own subnet and rules.
 5. 802.1X with FreeRADIUS (EAP-TLS), so devices land in the right VLAN automatically.
 6. 5G backup WAN (multi-WAN).
+
+---
+
+## Feedback
+
+Suggestions and improvements are welcome. If you spot a mistake or a better way to do something, feel free to open an issue.
 
 ---
 
