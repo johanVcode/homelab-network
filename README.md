@@ -42,10 +42,15 @@ flowchart TD
 | Hypervisor | Proxmox                               | Linux VMs, incl. Oracle Linux for DB practice |
 | LAN party switch | TP-Link TL-SG108E (older unit, reused) | Connected to an untagged VLAN 50 port on the main switch, so every port on it lands in GAMING. Friends plug in for LAN gaming without reaching the rest of the network |
 
+<details>
+<summary>📷 Show hardware photos</summary>
+
 <p>
   <img src="images/optiplex-front.png" alt="OptiPlex firewall, front" width="45%">
   <img src="images/optiplex-inside.png" alt="OptiPlex firewall, inside with the I226-V NIC" width="45%">
 </p>
+
+</details>
 
 ---
 
