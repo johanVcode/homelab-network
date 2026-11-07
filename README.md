@@ -21,7 +21,7 @@ flowchart TD
     SW --- V10[VLAN 10 INFRA]
     SW --- V20[VLAN 20 ADMIN]
     SW --- V30[VLAN 30 HYPERVISOR<br/>Proxmox]
-    SW --- V40[VLAN 40 HOMELAB<br/>Oracle Linux VMs]
+    SW --- V40[VLAN 40 HOMELAB<br/>Oracle/Debian Linux VMs]
     SW --- V50[VLAN 50 GAMING]
     SW --- V60[VLAN 60 MOBILE<br/>Wi-Fi AP]
     SW --- V70[VLAN 70 IOT]
