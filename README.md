@@ -82,8 +82,12 @@ Deny by default. Only the flows below are allowed:
 
 1. **ADMIN → any:** allow, logged. Deliberate: admin PCs manage everything.
 2. **All VLANs → firewall, DNS (53) and NTP (123):** allow.
-3. **All VLANs → any, DNS-over-TLS (853):** block, logged. This forces clients to use the firewall's resolver.
-4. **Every other VLAN → `! PRIVATE_NETS`:** allow. Internet yes, other VLANs no.
+3. **Every other VLAN → `! PRIVATE_NETS`:** allow. Internet yes, other VLANs no.
+
+On top of that, two rules make sure every client uses the firewall's resolver:
+
+- **Outside DNS (53) is redirected:** a NAT rule per VLAN sends any query for an outside resolver (e.g. `8.8.8.8`) to Unbound on the firewall. The client doesn't notice.
+- **DNS-over-TLS (853) is blocked, logged:** encrypted DNS to outside resolvers is dropped, so clients fall back to plain DNS, which then gets redirected.
 
 `PRIVATE_NETS` is an alias for RFC1918, CGNAT and link-local ranges. Anything not matched is dropped.
 
@@ -103,6 +107,7 @@ Deny by default. Only the flows below are allowed:
 ## Services
 
 - **DNS (Unbound):** DNSSEC validation, and all upstream queries go out encrypted with **DNS-over-TLS** to Quad9, so my ISP can't read or tamper with them. Identity and version hidden. Local names for devices via host overrides (with PTR).
+- **DNS blocklist:** Steven Black's unified hosts list (ads and malware domains). Because all DNS is forced through the firewall, no device can bypass it with its own resolver.
 - **DHCP (Kea):** one subnet per VLAN, reservations for known devices.
 - **Traffic shaping:** fq_codel on WAN up/down to keep latency low under load.
 - **WAN:** private and bogon networks blocked. IPv6 disabled for now.
@@ -134,7 +139,7 @@ I designed and tested the setup in a **Proxmox VM** first, then moved it to bare
 
 **Where I had help:**
 - **802.1Q VLANs and trunking** between OPNsense and the switch.
-- **Forcing DNS through the firewall** by blocking DNS-over-TLS (port 853), which was a technique I didn't know.
+- **Forcing DNS through the firewall:** blocking DNS-over-TLS (port 853) and redirecting plain DNS (port 53) with a NAT rule. Both were techniques I didn't know.
 - **Troubleshooting** why VLANs other than ADMIN had no internet after the migration.
 
 I used an AI assistant (Claude) as support during the migration, mainly to plan the order of changes so I wouldn't lose connectivity.
@@ -146,6 +151,8 @@ I used an AI assistant (Claude) as support during the migration, mainly to plan 
 ## Troubleshooting notes
 
 **IDS/IPS lockout on bare metal (open issue).** Suricata in inline IPS mode ran fine while I tuned it in a Proxmox VM. On bare metal, enabling it cut off both SSH and the web GUI, and only a hard reset brought the firewall back. Searching suggested the Intel I226-V or netmap on FreeBSD, but I haven't confirmed the cause. IDS/IPS stays off until I can test it properly. To get evidence next time, I've added remote syslog to another machine, so the logs survive a lockout.
+
+**DNS redirect that never matched.** My first "Force DNS to firewall" NAT rule sat on the trunk interface, which has no IP and carries only tagged VLAN traffic, so it never caught anything. I only found it when a test query to `8.8.8.8` was answered by Google instead of my firewall. The fix was to move the rule to the VLAN interfaces, with source *any* and destination *not This Firewall*. Lesson: a rule that looks right in the list can still do nothing, so test it from a client.
 
 **VLAN migration.** Moving from one flat /24 to VLANs taught me:
 - OPNsense doesn't discover VLANs from the switch. Each one is created, assigned and given rules on the firewall.
@@ -169,6 +176,10 @@ Snapshots live on the same disk, so they protect against bad changes, not disk f
 - After each change: check the **ARP table** (is the device there?), **DHCP leases**, and test from a client with `nslookup` and `ping`.
 - Firewall rules are tested from the VLAN they apply to, both allowed and blocked traffic, and blocks are confirmed in the firewall log.
 - I download a **config backup before and after** larger changes, so I can roll back if needed.
+- **DNS redirect test:** `nslookup avon-barksdale.internal 8.8.8.8`. Google can't know a local `.internal` name, so getting the firewall's IP back proves the query was silently answered by Unbound.
+
+![DNS redirect test](images/dns-redirect-test.png)
+*Asking Google (8.8.8.8) for a local `.internal` name still returns the firewall's IP: the query was silently redirected to Unbound.*
 
 ---
 
@@ -184,20 +195,18 @@ Snapshots live on the same disk, so they protect against bad changes, not disk f
 ## Known limitations
 
 - **No isolation inside a VLAN.** Devices in the same VLAN talk through the switch, not the firewall, so the firewall can't stop that traffic.
-- **Plain DNS bypass.** Clients can still use an outside resolver on port 53. A per-VLAN redirect isn't in place yet.
-- **DNS blocklist** is enabled but no lists are selected.
-- **INFRA** has no internet rule (e.g. no switch firmware updates from the switch itself).
+- **DNS-over-HTTPS isn't blocked.** DoH runs on port 443 like normal web traffic, so a client with DoH built in (e.g. a browser) can still bypass the firewall's resolver.
+- **INFRA has no internet access, on purpose.** Switch firmware is downloaded manually, checked against the vendor's SHA-256 checksum, and then installed. It's more work, but nothing unverified runs on the management network.
 
 ---
 
 ## Roadmap
 
-1. Force all DNS through the firewall (port 53 redirect per VLAN).
-2. Select DNS blocklists, and re-enable IDS/IPS after tuning.
-3. Game server VM in SERVER, with friends connecting over Tailscale or WireGuard.
-4. Remote access VPN with its own subnet and rules.
-5. 802.1X with FreeRADIUS (EAP-TLS), so devices land in the right VLAN automatically.
-6. 5G backup WAN (multi-WAN).
+1. Re-enable IDS/IPS after finding the cause of the lockout, and add a dedicated threat blocklist (e.g. abuse.ch URLhaus).
+2. Game server VM in SERVER, with friends connecting over Tailscale or WireGuard.
+3. Remote access VPN with its own subnet and rules.
+4. 802.1X with FreeRADIUS (EAP-TLS), so devices land in the right VLAN automatically.
+5. 5G backup WAN (multi-WAN).
 
 ---
 
@@ -213,4 +222,6 @@ Suggestions and improvements are welcome. If you spot a mistake or a better way 
 | ------- | ------------------------------------------------------------------------- |
 | 2026-10 | Repo created: flat network, firewall design, IDS policy                   |
 | 2026-11 | Managed switch + 9 VLANs, management moved to INFRA, SSH key-only, local DNS names |
-| 2026-11 | Sanitized config backup and topology diagram added |
+| 2026-11 | Sanitized config backup and topology diagram added                        |
+| 2026-11 | All DNS forced through the firewall: port 53 redirect per VLAN to Unbound. Replaced a broken NAT rule that sat on the trunk and never matched |
+| 2026-11 | README corrected: DNS blocklist (Steven Black) documented as active, limitations and roadmap updated |
